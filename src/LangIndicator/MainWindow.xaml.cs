@@ -39,7 +39,7 @@ public partial class MainWindow
     [MemberNotNull(nameof(_refreshTimer))]
     private void InitializeTimer()
     {
-        _hiddenTimer = new Timer(AutoHidden, null, Timeout.Infinite, Timeout.Infinite);
+        _hiddenTimer = new Timer(HideHandle, null, Timeout.Infinite, Timeout.Infinite);
 
         _refreshTimer = new DispatcherTimer
         {
@@ -65,48 +65,43 @@ public partial class MainWindow
         var conversionMode = result.ToInt32();
         if (conversionMode == _lastConversionMode) return;
         _lastConversionMode = conversionMode;
-        UpdateStatusDisplay(conversionMode);
+        UpdateDisplay(conversionMode);
     }
 
-    private void UpdateStatusDisplay(int conversionMode)
+    private void UpdateDisplay(int conversionMode)
     {
         var isChineseMode = (conversionMode & ImeCmoDeNative) != 0;
-        // var isFullShape = (conversionMode & ImeCmoDeFullShape) != 0;
-
-        // Get the new text and color before starting animation
-        LangTxt.Text = isChineseMode ? "中" : "英";
-        LangTxt.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
 
         var point = GetCursorPosition();
         Left = point.Item1;
         Top = point.Item2;
 
-        Dispatcher.Invoke(() =>
+        LangTxt.Text = isChineseMode ? "中" : "英";
+        LangTxt.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
+
+        var easing = new CircleEase
         {
-            var easing = new CircleEase
-            {
-                EasingMode = EasingMode.EaseInOut
-            };
-            var windowOpacity = new DoubleAnimation
-            {
-                From = 0,
-                To = 1,
-                EasingFunction = easing,
-                Duration = TimeSpan.FromMilliseconds(AnimationDuration),
-                FillBehavior = FillBehavior.Stop
-            };
-            var windowMotion = new DoubleAnimation
-            {
-                From = Top + 10,
-                To = Top,
-                EasingFunction = easing,
-                Duration = TimeSpan.FromMilliseconds(AnimationDuration),
-                FillBehavior = FillBehavior.Stop
-            };
-            BeginAnimation(OpacityProperty, windowOpacity);
-            BeginAnimation(TopProperty, windowMotion);
-            Visibility = Visibility.Visible;
-        });
+            EasingMode = EasingMode.EaseInOut
+        };
+        var windowOpacity = new DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            EasingFunction = easing,
+            Duration = TimeSpan.FromMilliseconds(AnimationDuration),
+            FillBehavior = FillBehavior.Stop
+        };
+        var windowMotion = new DoubleAnimation
+        {
+            From = Top + 10,
+            To = Top,
+            EasingFunction = easing,
+            Duration = TimeSpan.FromMilliseconds(AnimationDuration),
+            FillBehavior = FillBehavior.Stop
+        };
+        BeginAnimation(OpacityProperty, windowOpacity);
+        BeginAnimation(TopProperty, windowMotion);
+        Visibility = Visibility.Visible;
 
         _hiddenTimer?.Change(HiddenDelay, Timeout.Infinite);
     }
@@ -140,7 +135,7 @@ public partial class MainWindow
         return new ValueTuple<double, double>(x, y);
     }
 
-    private void AutoHidden(object? state)
+    private void HideHandle(object? state)
     {
         Dispatcher.Invoke(() => Visibility = Visibility.Collapsed);
     }
