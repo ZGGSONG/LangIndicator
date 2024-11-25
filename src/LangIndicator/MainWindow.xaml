@@ -16,6 +16,7 @@
     ShowActivated="False"
     ShowInTaskbar="False"
     Topmost="True"
+    WindowStartupLocation="Manual"
     WindowStyle="None"
     mc:Ignorable="d">
     <Grid Margin="18">

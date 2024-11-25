@@ -11,8 +11,6 @@ public partial class MainWindow
 {
     private const int HiddenDelay = 2000;
     private const int RefreshDelay = 100;
-    private readonly double defaultLeft;
-    private readonly double defaultTop;
     private Timer? _hiddenTimer;
     private int _lastConversionMode = -1;
     private DispatcherTimer _refreshTimer;
@@ -21,18 +19,14 @@ public partial class MainWindow
     {
         InitializeComponent();
         InitializeTimer();
-
-        // 保存默认位置（桌面右下角）
-        defaultLeft = SystemParameters.WorkArea.Width - Width - 10;
-        defaultTop = SystemParameters.WorkArea.Height - Height - 10;
     }
 
     protected override void OnSourceInitialized(EventArgs e)
     {
-        Left = defaultLeft;
-        Top = defaultTop;
+        Left = SystemParameters.WorkArea.Width - Width - 10;
+        Top = SystemParameters.WorkArea.Height - Height - 10;
 
-        MouseLeftButtonDown += (s, e) => DragMove();
+        MouseLeftButtonDown += (_, _) => DragMove();
 
         Visibility = Visibility.Collapsed;
 
@@ -76,7 +70,7 @@ public partial class MainWindow
     private void UpdateStatusDisplay(int conversionMode)
     {
         var isChineseMode = (conversionMode & ImeCmoDeNative) != 0;
-        var isFullShape = (conversionMode & ImeCmoDeFullShape) != 0;
+        // var isFullShape = (conversionMode & ImeCmoDeFullShape) != 0;
 
         StatusText.Text = isChineseMode ? "中" : "英";
         StatusText.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
@@ -88,43 +82,23 @@ public partial class MainWindow
         Visibility = Visibility.Visible;
         _hiddenTimer?.Change(HiddenDelay, Timeout.Infinite);
     }
+    
+    private ValueTuple<double, double> GetCursorPosition()
+    {
+        GetCursorPos(out Point point);
+
+        var source = PresentationSource.FromVisual(Application.Current.MainWindow!);
+        if (source?.CompositionTarget == null) return new ValueTuple<double, double>(point.X, point.Y);
+        var transformToDevice = source.CompositionTarget.TransformToDevice;
+        
+        return new ValueTuple<double, double>(point.X / transformToDevice.M11, point.Y / transformToDevice.M22);
+    }
 
     private void UpdateWindowPosition()
     {
-        var foregroundWindow = GetForegroundWindow();
-        if (foregroundWindow != IntPtr.Zero)
-        {
-            var threadId = GetWindowThreadProcessId(foregroundWindow, IntPtr.Zero);
-            var guiInfo = new GUITHREADINFO { cbSize = Marshal.SizeOf(typeof(GUITHREADINFO)) };
-
-            if (GetGUIThreadInfo(threadId, ref guiInfo) && guiInfo.hwndCaret != IntPtr.Zero)
-            {
-                // 有光标，获取光标位置
-                var caretRect = guiInfo.rcCaret;
-                var point = new POINT { x = caretRect.left, y = caretRect.bottom };
-
-                // 将客户区坐标转换为屏幕坐标
-                if (ClientToScreen(guiInfo.hwndCaret, ref point))
-                {
-                    double newLeft = point.x;
-                    double newTop = point.y;
-
-                    // 确保窗口不会超出屏幕范围
-                    newLeft = Math.Max(0, Math.Min(newLeft, SystemParameters.WorkArea.Width - Width));
-                    newTop = Math.Max(0, Math.Min(newTop, SystemParameters.WorkArea.Height - Height));
-
-                    // 应用新位置
-                    Left = newLeft;
-                    Top = newTop;
-                    return;
-                }
-            }
-        }
-
-        // 如果没有找到光标或出现错误，使用默认位置
-        Left = defaultLeft;
-        Top = defaultTop;
-
+        var point = GetCursorPosition();
+        Left = point.Item1;
+        Top = point.Item2;
         ShowAnimation();
     }
 
@@ -132,15 +106,23 @@ public partial class MainWindow
     {
         Dispatcher.Invoke(() =>
         {
-            var animation = new DoubleAnimation
+            var opacityAnimation = new DoubleAnimation
+            {
+                From = 0,
+                To = 1,
+                Duration = TimeSpan.FromMilliseconds(200),
+                FillBehavior = FillBehavior.Stop
+            };
+            var topAnimation = new DoubleAnimation
             {
                 From = Top + 10,
                 To = Top,
                 Duration = TimeSpan.FromMilliseconds(200),
-                EasingFunction = new QuadraticEase()
+                FillBehavior = FillBehavior.Stop
             };
-
-            BeginAnimation(TopProperty, animation);
+        
+            BeginAnimation(OpacityProperty, opacityAnimation);
+            BeginAnimation(TopProperty, topAnimation);
         });
     }
 
@@ -166,7 +148,6 @@ public partial class MainWindow
     private const int WmImeControl = 0x283;
     private const int ImcGetConversionMode = 0x001;
     private const int ImeCmoDeNative = 0x1;
-    private const int ImeCmoDeFullShape = 0x8;
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
@@ -179,43 +160,15 @@ public partial class MainWindow
 
 
     [StructLayout(LayoutKind.Sequential)]
-    private struct GUITHREADINFO
+    private struct Point(int x, int y)
     {
-        public int cbSize;
-        public int flags;
-        public IntPtr hwndActive;
-        public IntPtr hwndFocus;
-        public IntPtr hwndCapture;
-        public IntPtr hwndMenuOwner;
-        public IntPtr hwndMoveSize;
-        public IntPtr hwndCaret;
-        public RECT rcCaret;
+        public int X = x;
+        public int Y = y;
     }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct RECT
-    {
-        public int left;
-        public int top;
-        public int right;
-        public int bottom;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct POINT
-    {
-        public int x;
-        public int y;
-    }
-
+    
     [DllImport("user32.dll")]
-    private static extern bool GetGUIThreadInfo(uint idThread, ref GUITHREADINFO lpgui);
-
-    [DllImport("user32.dll")]
-    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr processId);
-
-    [DllImport("user32.dll")]
-    private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out Point lpPoint);
 
     #endregion
 }
