@@ -9,7 +9,7 @@ namespace LangIndicator;
 
 public partial class MainWindow
 {
-    private const int HiddenDelay = 2000;
+    private const int HiddenDelay = 1000;
     private const int RefreshDelay = 100;
     private Timer? _hiddenTimer;
     private int _lastConversionMode = -1;
@@ -72,29 +72,46 @@ public partial class MainWindow
         var isChineseMode = (conversionMode & ImeCmoDeNative) != 0;
         // var isFullShape = (conversionMode & ImeCmoDeFullShape) != 0;
 
-        StatusText.Text = isChineseMode ? "中" : "英";
-        StatusText.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
+        LangTxt.Text = isChineseMode ? "中" : "英";
+        LangTxt.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
     }
 
     private void ShowView()
     {
-        UpdateWindowPosition();
-        Visibility = Visibility.Visible;
+        UpdateWindow();
         _hiddenTimer?.Change(HiddenDelay, Timeout.Infinite);
     }
-    
+
     private ValueTuple<double, double> GetCursorPosition()
     {
-        GetCursorPos(out Point point);
+        GetCursorPos(out var point);
 
         var source = PresentationSource.FromVisual(Application.Current.MainWindow!);
         if (source?.CompositionTarget == null) return new ValueTuple<double, double>(point.X, point.Y);
         var transformToDevice = source.CompositionTarget.TransformToDevice;
-        
-        return new ValueTuple<double, double>(point.X / transformToDevice.M11, point.Y / transformToDevice.M22);
+
+        var x = point.X / transformToDevice.M11;
+        var y = point.Y / transformToDevice.M22;
+
+        // 获取屏幕工作区的宽度和高度
+        var screenWidth = SystemParameters.WorkArea.Width;
+        var screenHeight = SystemParameters.WorkArea.Height;
+
+        // 判断是否到达屏幕右下方边缘
+        if (x + Width > screenWidth)
+        {
+            x = screenWidth - Width;
+        }
+
+        if (y + Height > screenHeight)
+        {
+            y = screenHeight - Height;
+        }
+
+        return new ValueTuple<double, double>(x, y);
     }
 
-    private void UpdateWindowPosition()
+    private void UpdateWindow()
     {
         var point = GetCursorPosition();
         Left = point.Item1;
@@ -106,23 +123,29 @@ public partial class MainWindow
     {
         Dispatcher.Invoke(() =>
         {
-            var opacityAnimation = new DoubleAnimation
+            var easing = new CircleEase
+            {
+                EasingMode = EasingMode.EaseInOut
+            };
+            var windowOpacity = new DoubleAnimation
             {
                 From = 0,
                 To = 1,
+                EasingFunction = easing,
                 Duration = TimeSpan.FromMilliseconds(200),
                 FillBehavior = FillBehavior.Stop
             };
-            var topAnimation = new DoubleAnimation
+            var windowMotion = new DoubleAnimation
             {
                 From = Top + 10,
                 To = Top,
+                EasingFunction = easing,
                 Duration = TimeSpan.FromMilliseconds(200),
                 FillBehavior = FillBehavior.Stop
             };
-        
-            BeginAnimation(OpacityProperty, opacityAnimation);
-            BeginAnimation(TopProperty, topAnimation);
+            BeginAnimation(OpacityProperty, windowOpacity);
+            BeginAnimation(TopProperty, windowMotion);
+            Visibility = Visibility.Visible;
         });
     }
 
@@ -165,7 +188,7 @@ public partial class MainWindow
         public int X = x;
         public int Y = y;
     }
-    
+
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetCursorPos(out Point lpPoint);

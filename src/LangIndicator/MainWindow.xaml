@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tb="http://www.hardcodet.net/taskbar"
+    Name="LangIndicator"
     Title="LangIndicator"
     Width="76"
     Height="66"
@@ -39,7 +40,7 @@
 
         <Border Background="Black" CornerRadius="8">
             <TextBlock
-                x:Name="StatusText"
+                x:Name="LangTxt"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 FontSize="17"
