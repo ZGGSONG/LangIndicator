@@ -11,6 +11,7 @@ public partial class MainWindow
 {
     private const int HiddenDelay = 1000;
     private const int RefreshDelay = 100;
+    private const int AnimationDuration = 200;
     private Timer? _hiddenTimer;
     private int _lastConversionMode = -1;
     private DispatcherTimer _refreshTimer;
@@ -65,8 +66,6 @@ public partial class MainWindow
         if (conversionMode == _lastConversionMode) return;
         _lastConversionMode = conversionMode;
         UpdateStatusDisplay(conversionMode);
-
-        ShowView();
     }
 
     private void UpdateStatusDisplay(int conversionMode)
@@ -76,12 +75,17 @@ public partial class MainWindow
 
         LangTxt.Text = isChineseMode ? "中" : "英";
         LangTxt.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
-    }
 
-    private void ShowView()
-    {
         UpdateWindow();
         _hiddenTimer?.Change(HiddenDelay, Timeout.Infinite);
+    }
+
+    private void UpdateWindow()
+    {
+        var point = GetCursorPosition();
+        Left = point.Item1;
+        Top = point.Item2;
+        ShowAnimation();
     }
 
     private ValueTuple<double, double> GetCursorPosition()
@@ -113,14 +117,6 @@ public partial class MainWindow
         return new ValueTuple<double, double>(x, y);
     }
 
-    private void UpdateWindow()
-    {
-        var point = GetCursorPosition();
-        Left = point.Item1;
-        Top = point.Item2;
-        ShowAnimation();
-    }
-
     private void ShowAnimation()
     {
         Dispatcher.Invoke(() =>
@@ -134,7 +130,7 @@ public partial class MainWindow
                 From = 0,
                 To = 1,
                 EasingFunction = easing,
-                Duration = TimeSpan.FromMilliseconds(200),
+                Duration = TimeSpan.FromMilliseconds(AnimationDuration),
                 FillBehavior = FillBehavior.Stop
             };
             var windowMotion = new DoubleAnimation
@@ -142,7 +138,7 @@ public partial class MainWindow
                 From = Top + 10,
                 To = Top,
                 EasingFunction = easing,
-                Duration = TimeSpan.FromMilliseconds(200),
+                Duration = TimeSpan.FromMilliseconds(AnimationDuration),
                 FillBehavior = FillBehavior.Stop
             };
             BeginAnimation(OpacityProperty, windowOpacity);
