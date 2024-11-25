@@ -33,6 +33,10 @@
         <tb:TaskbarIcon IconSource="/Assets/favicon.png" ToolTipText="Lang Indicator">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
+                    <MenuItem
+                        Name="Startup"
+                        Click="Startup_OnClick"
+                        Header="开机启动" />
                     <MenuItem Click="Exit_Click" Header="退出" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>

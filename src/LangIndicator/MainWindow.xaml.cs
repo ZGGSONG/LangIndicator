@@ -30,6 +30,8 @@ public partial class MainWindow
 
         Visibility = Visibility.Collapsed;
 
+        Startup.IsChecked = ShortcutUtilities.IsStartup();
+
         base.OnSourceInitialized(e);
     }
 
@@ -160,11 +162,28 @@ public partial class MainWindow
         base.OnClosed(e);
     }
 
+    #region NotiryIcon
+
+    private void Startup_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (ShortcutUtilities.IsStartup())
+        {
+            ShortcutUtilities.UnSetStartup();
+            Startup.IsChecked = false;
+        }
+        else
+        {
+            ShortcutUtilities.SetStartup();
+            Startup.IsChecked = true;
+        }
+    }
+
     private void Exit_Click(object sender, RoutedEventArgs e)
     {
         Close();
     }
 
+    #endregion
 
     #region Win32 API
 
