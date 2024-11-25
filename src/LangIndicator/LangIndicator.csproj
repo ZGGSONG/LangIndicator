@@ -20,10 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="WPF-UI.Tray" Version="3.0.5" />
-      <PackageReference Include="XamlFlair.WPF" Version="1.2.13" />
-      <PackageReference Include="System.Net.Http" Version="4.3.4" />
-      <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+      <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
     </ItemGroup>
 
     <ItemGroup>

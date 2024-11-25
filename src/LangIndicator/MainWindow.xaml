@@ -5,8 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:LangIndicator"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:tray="http://schemas.lepo.co/wpfui/2022/xaml/tray"
-    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:tb="http://www.hardcodet.net/taskbar"
     Title="LangIndicator"
     Width="40"
     Height="30"
@@ -27,29 +26,18 @@
                 FontSize="16"
                 FontWeight="DemiBold" />
 
-            <tray:NotifyIcon
-                x:Name="NotifyIcon"
-                Icon="/Assets/favicon.png"
-                ToolTip="LangIndicator">
-                <tray:NotifyIcon.Menu>
+            <tb:TaskbarIcon
+                IconSource="/Assets/favicon.png"
+                MenuActivation="RightClick"
+                PopupActivation="RightClick"
+                ToolTipText="Lang Indicator">
+                <tb:TaskbarIcon.ContextMenu>
                     <ContextMenu>
-                        <MenuItem x:Name="SettingsMenuItem" Header="Settings">
-                            <MenuItem.Icon>
-                                <ui:SymbolIcon Symbol="Settings24" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator />
-                        <MenuItem
-                            x:Name="CloseMenuItem"
-                            Click="Exit_Click"
-                            Header="Close Lang Indicator">
-                            <MenuItem.Icon>
-                                <ui:SymbolIcon Symbol="Dismiss24" />
-                            </MenuItem.Icon>
-                        </MenuItem>
+                        <MenuItem Header="设置" />
+                        <MenuItem Click="Exit_Click" Header="退出" />
                     </ContextMenu>
-                </tray:NotifyIcon.Menu>
-            </tray:NotifyIcon>
+                </tb:TaskbarIcon.ContextMenu>
+            </tb:TaskbarIcon>
         </Grid>
     </Border>
 </Window>
