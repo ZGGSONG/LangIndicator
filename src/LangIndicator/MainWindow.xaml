@@ -13,9 +13,11 @@
     AllowsTransparency="True"
     Background="Transparent"
     Focusable="False"
-    FontFamily="PingFang SC"
+    FontFamily="Microsoft YaHei UI"
     ResizeMode="NoResize"
+    ShowActivated="False"
     ShowInTaskbar="False"
+    Topmost="True"
     WindowStyle="None"
     mc:Ignorable="d">
     <Grid Margin="18">
@@ -28,30 +30,20 @@
                 Color="Gray" />
         </Grid.Effect>
 
-        <tb:TaskbarIcon
-            IconSource="/Assets/favicon.png"
-            MenuActivation="All"
-            PopupActivation="All"
-            ToolTipText="Lang Indicator">
+        <tb:TaskbarIcon IconSource="/Assets/favicon.png" ToolTipText="Lang Indicator">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
-                    <!--<MenuItem Header="设置" />-->
                     <MenuItem Click="Exit_Click" Header="退出" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
 
-        <Border
-            xf:Animations.Primary="{xf:Animate BasedOn={StaticResource FadeInAndSlideFromBottom},
-                                               Event=Visibility,
-                                               Delay=0}"
-            Background="Black"
-            CornerRadius="8">
+        <Border Background="Black" CornerRadius="8">
             <TextBlock
                 x:Name="StatusText"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                FontSize="16"
+                FontSize="17"
                 FontWeight="Bold" />
         </Border>
     </Grid>

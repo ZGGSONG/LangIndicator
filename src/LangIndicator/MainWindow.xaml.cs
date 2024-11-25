@@ -11,6 +11,13 @@ public partial class MainWindow
     private int lastConversionMode = -1;
     private DispatcherTimer timer;
 
+    /// <summary>
+    ///     自动隐藏延时
+    /// </summary>
+    private const int HiddenDelay = 2000;
+    private Timer? _HiddenTimer;
+
+
     public MainWindow()
     {
         InitializeComponent();
@@ -31,6 +38,7 @@ public partial class MainWindow
     [MemberNotNull(nameof(timer))]
     private void InitializeTimer()
     {
+        _HiddenTimer = new Timer(AutoHidden, null, Timeout.Infinite, Timeout.Infinite);
         timer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(100)
@@ -62,16 +70,10 @@ public partial class MainWindow
                     UpdateStatusDisplay(conversionMode);
                     
                     Visibility = Visibility.Visible;
-
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(3000);
-
-                        Dispatcher.Invoke(() => Visibility = Visibility.Collapsed);
-                    });
+                    _HiddenTimer?.Change(HiddenDelay, Timeout.Infinite);
 
                     // 调试信息
-                    //Console.WriteLine($"Conversion Mode: {conversionMode}");
+                    System.Diagnostics.Debug.WriteLine($"Conversion Mode: {conversionMode}");
                 }
             }
         }
@@ -86,7 +88,14 @@ public partial class MainWindow
         StatusText.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
 
         // 调试信息
-        Console.WriteLine($"Chinese Mode: {isChineseMode}, Full Shape: {isFullShape}");
+        System.Diagnostics.Debug.WriteLine($"Chinese Mode: {isChineseMode}, Full Shape: {isFullShape}");
+    }
+
+    private void AutoHidden(object? state)
+    {
+        Dispatcher.Invoke(() => Visibility = Visibility.Collapsed);
+        // 调试信息
+        System.Diagnostics.Debug.WriteLine("Auto Hidden");
     }
 
     protected override void OnClosed(EventArgs e)
