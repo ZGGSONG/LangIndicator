@@ -125,6 +125,11 @@ public partial class MainWindow
         Left = defaultLeft;
         Top = defaultTop;
 
+        ShowAnimation();
+    }
+
+    private void ShowAnimation()
+    {
         Dispatcher.Invoke(() =>
         {
             var animation = new DoubleAnimation
