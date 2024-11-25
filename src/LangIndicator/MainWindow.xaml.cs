@@ -14,16 +14,18 @@ public partial class MainWindow
     public MainWindow()
     {
         InitializeComponent();
-        InitializeWindowStyle();
         InitializeTimer();
     }
-
-    private void InitializeWindowStyle()
+    protected override void OnSourceInitialized(EventArgs e)
     {
         Left = SystemParameters.WorkArea.Width - Width - 10;
         Top = SystemParameters.WorkArea.Height - Height - 10;
 
         MouseLeftButtonDown += (s, e) => DragMove();
+
+        Visibility = Visibility.Collapsed;
+
+        base.OnSourceInitialized(e);
     }
 
     [MemberNotNull(nameof(timer))]
@@ -58,6 +60,15 @@ public partial class MainWindow
                 {
                     lastConversionMode = conversionMode;
                     UpdateStatusDisplay(conversionMode);
+                    
+                    Visibility = Visibility.Visible;
+
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(3000);
+
+                        Dispatcher.Invoke(() => Visibility = Visibility.Collapsed);
+                    });
 
                     // 调试信息
                     //Console.WriteLine($"Conversion Mode: {conversionMode}");

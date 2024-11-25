@@ -6,38 +6,53 @@
     xmlns:local="clr-namespace:LangIndicator"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tb="http://www.hardcodet.net/taskbar"
+    xmlns:xf="clr-namespace:XamlFlair;assembly=XamlFlair.WPF"
     Title="LangIndicator"
-    Width="40"
-    Height="30"
+    Width="76"
+    Height="66"
     AllowsTransparency="True"
     Background="Transparent"
+    Focusable="False"
     FontFamily="PingFang SC"
     ResizeMode="NoResize"
     ShowInTaskbar="False"
-    Topmost="True"
     WindowStyle="None"
     mc:Ignorable="d">
-    <Border Background="Black" CornerRadius="10">
-        <Grid>
+    <Grid Margin="18">
+        <Grid.Effect>
+            <DropShadowEffect
+                BlurRadius="18"
+                Direction="-90"
+                RenderingBias="Quality"
+                ShadowDepth="2"
+                Color="Gray" />
+        </Grid.Effect>
+
+        <tb:TaskbarIcon
+            IconSource="/Assets/favicon.png"
+            MenuActivation="All"
+            PopupActivation="All"
+            ToolTipText="Lang Indicator">
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu>
+                    <!--<MenuItem Header="设置" />-->
+                    <MenuItem Click="Exit_Click" Header="退出" />
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
+
+        <Border
+            xf:Animations.Primary="{xf:Animate BasedOn={StaticResource FadeInAndSlideFromBottom},
+                                               Event=Visibility,
+                                               Delay=0}"
+            Background="Black"
+            CornerRadius="8">
             <TextBlock
                 x:Name="StatusText"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 FontSize="16"
-                FontWeight="DemiBold" />
-
-            <tb:TaskbarIcon
-                IconSource="/Assets/favicon.png"
-                MenuActivation="RightClick"
-                PopupActivation="RightClick"
-                ToolTipText="Lang Indicator">
-                <tb:TaskbarIcon.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="设置" />
-                        <MenuItem Click="Exit_Click" Header="退出" />
-                    </ContextMenu>
-                </tb:TaskbarIcon.ContextMenu>
-            </tb:TaskbarIcon>
-        </Grid>
-    </Border>
+                FontWeight="Bold" />
+        </Border>
+    </Grid>
 </Window>
