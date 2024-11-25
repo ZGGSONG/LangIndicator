@@ -3,5 +3,14 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     StartupUri="MainWindow.xaml">
-    <Application.Resources />
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/LangIndicator;component/ContextMenuStyle.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style BasedOn="{StaticResource ModernContextMenu}" TargetType="{x:Type ContextMenu}" />
+            <Style BasedOn="{StaticResource ModernMenuItem}" TargetType="{x:Type MenuItem}" />
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>

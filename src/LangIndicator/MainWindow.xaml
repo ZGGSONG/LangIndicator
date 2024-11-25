@@ -38,7 +38,7 @@
                         Click="Startup_OnClick"
                         Header="开机启动" />
                     <Separator />
-                    <MenuItem Click="Exit_Click" Header="退出" />
+                    <MenuItem Click="Exit_Click" Header="退出程序" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>

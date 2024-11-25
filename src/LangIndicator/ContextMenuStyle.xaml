@@ -1,0 +1,130 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+    <!--  Colors  -->
+    <SolidColorBrush x:Key="MenuBackground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="MenuBorderBrush" Color="#E5E5E5" />
+    <SolidColorBrush x:Key="MenuItemHoverBackground" Color="#E1E1E1" />
+    <SolidColorBrush x:Key="MenuItemPressedBackground" Color="#D5D5D5" />
+    <!--<SolidColorBrush x:Key="MenuItemCheckedBackground" Color="#C5C5C5" />-->
+
+    <!--  ContextMenu Style  -->
+    <Style x:Key="ModernContextMenu" TargetType="{x:Type ContextMenu}">
+        <Setter Property="Background" Value="{StaticResource MenuBackground}" />
+        <Setter Property="BorderBrush" Value="{StaticResource MenuBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="2" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ContextMenu}">
+                    <Border
+                        Padding="{TemplateBinding Padding}"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="4">
+                        <Border.Effect>
+                            <DropShadowEffect
+                                BlurRadius="8"
+                                Opacity="0.2"
+                                ShadowDepth="1" />
+                        </Border.Effect>
+                        <StackPanel IsItemsHost="True" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--  MenuItem Style  -->
+    <Style x:Key="ModernMenuItem" TargetType="{x:Type MenuItem}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type MenuItem}">
+                    <Border
+                        x:Name="Bd"
+                        Padding="{TemplateBinding Padding}"
+                        Background="Transparent"
+                        CornerRadius="3">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="24" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <!--  Check Mark  -->
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="✔"
+                                Visibility="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                            <!--  Icon  -->
+                            <ContentPresenter
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                ContentSource="Icon" />
+
+                            <!--  Header  -->
+                            <ContentPresenter
+                                Grid.Column="2"
+                                Margin="4,0,0,0"
+                                VerticalAlignment="Center"
+                                ContentSource="Header" />
+
+                            <!--  InputGestureText  -->
+                            <TextBlock
+                                Grid.Column="3"
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="{TemplateBinding InputGestureText}" />
+
+                            <!--  Submenu Arrow  -->
+                            <Path
+                                x:Name="Arrow"
+                                Grid.Column="4"
+                                Width="4"
+                                Height="8"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Data="M0,0 L4,4 0,8 z"
+                                Fill="{TemplateBinding Foreground}" />
+                        </Grid>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <!--  Mouse Over  -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource MenuItemHoverBackground}" />
+                        </Trigger>
+
+                        <!--  Pressed  -->
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource MenuItemPressedBackground}" />
+                        </Trigger>
+
+                        <!--  Checked  -->
+                        <!--<Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource MenuItemCheckedBackground}" />
+                        </Trigger>-->
+
+                        <!--  Disabled  -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </Trigger>
+
+                        <!--  Hide Arrow if no submenu  -->
+                        <Trigger Property="HasItems" Value="False">
+                            <Setter TargetName="Arrow" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
