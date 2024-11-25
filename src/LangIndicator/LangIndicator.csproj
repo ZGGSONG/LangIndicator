@@ -6,6 +6,29 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<ApplicationIcon>Assets\favicon.ico</ApplicationIcon>
+		<AssemblyVersion>0.0.1</AssemblyVersion>
+		<FileVersion>0.0.1</FileVersion>
+		<Copyright>ZGGSONG</Copyright>
+		<BaseOutputPath>..\..\Bin\</BaseOutputPath>
     </PropertyGroup>
+
+    <ItemGroup>
+      <None Remove="Assets\favicon.ico" />
+      <None Remove="Assets\favicon.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="WPF-UI.Tray" Version="3.0.5" />
+      <PackageReference Include="XamlFlair.WPF" Version="1.2.13" />
+      <PackageReference Include="System.Net.Http" Version="4.3.4" />
+      <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Resource Include="Assets\favicon.ico" />
+      <Resource Include="Assets\favicon.png" />
+    </ItemGroup>
 
 </Project>

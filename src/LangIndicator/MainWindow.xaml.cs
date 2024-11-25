@@ -1,6 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -8,14 +8,7 @@ namespace LangIndicator;
 
 public partial class MainWindow
 {
-    // Win32 API 常量
-    private const int WM_IME_CONTROL = 0x283;
-    private const int IMC_GETCONVERSIONMODE = 0x001;
-    private const int IME_CMODE_NATIVE = 0x1;
-    private const int IME_CMODE_FULLSHAPE = 0x8;
     private int lastConversionMode = -1;
-
-    private TextBlock statusText;
     private DispatcherTimer timer;
 
     public MainWindow()
@@ -25,44 +18,15 @@ public partial class MainWindow
         InitializeTimer();
     }
 
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetForegroundWindow();
-
-    [DllImport("imm32.dll")]
-    private static extern IntPtr ImmGetDefaultIMEWnd(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-
     private void InitializeWindowStyle()
     {
-        Topmost = true;
-        WindowStyle = WindowStyle.None;
-        ResizeMode = ResizeMode.NoResize;
-        ShowInTaskbar = false;
-        Width = 60;
-        Height = 30;
-
         Left = SystemParameters.WorkArea.Width - Width - 10;
         Top = SystemParameters.WorkArea.Height - Height - 10;
-
-        statusText = new TextBlock
-        {
-            FontSize = 16,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
-        var mainGrid = new Grid
-        {
-            Background = new SolidColorBrush(Colors.Black) { Opacity = 0.7 }
-        };
-        mainGrid.Children.Add(statusText);
-        Content = mainGrid;
 
         MouseLeftButtonDown += (s, e) => DragMove();
     }
 
+    [MemberNotNull(nameof(timer))]
     private void InitializeTimer()
     {
         timer = new DispatcherTimer
@@ -73,7 +37,7 @@ public partial class MainWindow
         timer.Start();
     }
 
-    private void Timer_Tick(object sender, EventArgs e)
+    private void Timer_Tick(object? sender, EventArgs e)
     {
         CheckImeStatus();
     }
@@ -96,7 +60,7 @@ public partial class MainWindow
                     UpdateStatusDisplay(conversionMode);
 
                     // 调试信息
-                    Console.WriteLine($"Conversion Mode: {conversionMode}");
+                    //Console.WriteLine($"Conversion Mode: {conversionMode}");
                 }
             }
         }
@@ -107,8 +71,8 @@ public partial class MainWindow
         var isChineseMode = (conversionMode & IME_CMODE_NATIVE) != 0;
         var isFullShape = (conversionMode & IME_CMODE_FULLSHAPE) != 0;
 
-        statusText.Text = isChineseMode ? "中" : "英";
-        statusText.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
+        StatusText.Text = isChineseMode ? "中" : "英";
+        StatusText.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
 
         // 调试信息
         Console.WriteLine($"Chinese Mode: {isChineseMode}, Full Shape: {isFullShape}");
@@ -119,4 +83,28 @@ public partial class MainWindow
         timer?.Stop();
         base.OnClosed(e);
     }
+
+    private void Exit_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+
+    #region Win32 API
+
+    private const int WM_IME_CONTROL = 0x283;
+    private const int IMC_GETCONVERSIONMODE = 0x001;
+    private const int IME_CMODE_NATIVE = 0x1;
+    private const int IME_CMODE_FULLSHAPE = 0x8;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("imm32.dll")]
+    private static extern IntPtr ImmGetDefaultIMEWnd(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+    #endregion
 }

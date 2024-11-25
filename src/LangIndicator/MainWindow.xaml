@@ -5,10 +5,51 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:LangIndicator"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tray="http://schemas.lepo.co/wpfui/2022/xaml/tray"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="LangIndicator"
-    Width="60"
+    Width="40"
     Height="30"
+    AllowsTransparency="True"
+    Background="Transparent"
+    FontFamily="PingFang SC"
+    ResizeMode="NoResize"
     ShowInTaskbar="False"
+    Topmost="True"
+    WindowStyle="None"
     mc:Ignorable="d">
-    <Grid />
+    <Border Background="Black" CornerRadius="10">
+        <Grid>
+            <TextBlock
+                x:Name="StatusText"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="16"
+                FontWeight="DemiBold" />
+
+            <tray:NotifyIcon
+                x:Name="NotifyIcon"
+                Icon="/Assets/favicon.png"
+                ToolTip="LangIndicator">
+                <tray:NotifyIcon.Menu>
+                    <ContextMenu>
+                        <MenuItem x:Name="SettingsMenuItem" Header="Settings">
+                            <MenuItem.Icon>
+                                <ui:SymbolIcon Symbol="Settings24" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem
+                            x:Name="CloseMenuItem"
+                            Click="Exit_Click"
+                            Header="Close Lang Indicator">
+                            <MenuItem.Icon>
+                                <ui:SymbolIcon Symbol="Dismiss24" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </tray:NotifyIcon.Menu>
+            </tray:NotifyIcon>
+        </Grid>
+    </Border>
 </Window>
