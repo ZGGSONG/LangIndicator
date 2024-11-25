@@ -79,17 +79,27 @@ public partial class MainWindow
         LangTxt.Text = isChineseMode ? "中" : "英";
         LangTxt.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
 
+        Visibility = Visibility.Visible;
+        LangIndicator.Opacity = 0;
+        LangTxt.Opacity = 0;
+
         var easing = new CircleEase
         {
             EasingMode = EasingMode.EaseInOut
+        };
+        var txtOpacity = new DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            Duration = TimeSpan.FromMilliseconds(AnimationDuration),
+            FillBehavior = FillBehavior.HoldEnd
         };
         var windowOpacity = new DoubleAnimation
         {
             From = 0,
             To = 1,
-            EasingFunction = easing,
             Duration = TimeSpan.FromMilliseconds(AnimationDuration),
-            FillBehavior = FillBehavior.Stop
+            FillBehavior = FillBehavior.HoldEnd
         };
         var windowMotion = new DoubleAnimation
         {
@@ -99,11 +109,21 @@ public partial class MainWindow
             Duration = TimeSpan.FromMilliseconds(AnimationDuration),
             FillBehavior = FillBehavior.Stop
         };
-        BeginAnimation(OpacityProperty, windowOpacity);
-        BeginAnimation(TopProperty, windowMotion);
-        Visibility = Visibility.Visible;
+        LangTxt.BeginAnimation(OpacityProperty, txtOpacity);
+        LangIndicator.BeginAnimation(OpacityProperty, windowOpacity);
+        LangIndicator.BeginAnimation(TopProperty, windowMotion);
 
         _hiddenTimer?.Change(HiddenDelay, Timeout.Infinite);
+    }
+
+    private void HideHandle(object? state)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            LangTxt.Opacity = 0;
+            LangIndicator.Opacity = 0;
+            Visibility = Visibility.Collapsed;
+        });
     }
 
     private ValueTuple<double, double> GetCursorPosition()
@@ -133,11 +153,6 @@ public partial class MainWindow
         }
 
         return new ValueTuple<double, double>(x, y);
-    }
-
-    private void HideHandle(object? state)
-    {
-        Dispatcher.Invoke(() => Visibility = Visibility.Collapsed);
     }
 
     protected override void OnClosed(EventArgs e)
