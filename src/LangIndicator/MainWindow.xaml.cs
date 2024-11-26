@@ -20,6 +20,12 @@ public partial class MainWindow
     {
         InitializeComponent();
         InitializeTimer();
+        InitializeMemoMgt();
+    }
+
+    private void InitializeMemoMgt()
+    {
+        MemoUtilities.CrackerOnlyGC(true);
     }
 
     protected override void OnSourceInitialized(EventArgs e)
