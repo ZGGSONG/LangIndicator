@@ -9,50 +9,48 @@ namespace LangIndicator;
 
 public partial class MainWindow
 {
+    private int _lastConversionMode = -1;
     private const int HiddenDelay = 1000;
     private const int RefreshDelay = 100;
     private const int AnimationDuration = 200;
-    private Timer? _hiddenTimer;
-    private int _lastConversionMode = -1;
-    private DispatcherTimer _refreshTimer;
+    private readonly Timer _hiddenTimer;
+    private readonly DispatcherTimer _refreshTimer;
+    private readonly IDisposable _gcHandle;
+
+    // 缓存常用的画笔和动画
+    private static readonly SolidColorBrush ChineseBrush = new(Colors.LightGreen);
+    private static readonly SolidColorBrush EnglishBrush = new(Colors.White);
+    private static readonly CircleEase CircleEaseAnimation = new() { EasingMode = EasingMode.EaseInOut };
+
 
     public MainWindow()
     {
         InitializeComponent();
-        InitializeTimer();
-        InitializeMemoMgt();
-    }
-
-    private void InitializeMemoMgt()
-    {
-        MemoUtilities.CrackerOnlyGC(true);
-    }
-
-    protected override void OnSourceInitialized(EventArgs e)
-    {
-        Left = SystemParameters.WorkArea.Width - Width - 10;
-        Top = SystemParameters.WorkArea.Height - Height - 10;
-
-        MouseLeftButtonDown += (_, _) => DragMove();
-
-        Visibility = Visibility.Collapsed;
-
-        Startup.IsChecked = ShortcutUtilities.IsStartup();
-
-        base.OnSourceInitialized(e);
-    }
-
-    [MemberNotNull(nameof(_refreshTimer))]
-    private void InitializeTimer()
-    {
         _hiddenTimer = new Timer(HideHandle, null, Timeout.Infinite, Timeout.Infinite);
-
-        _refreshTimer = new DispatcherTimer
+        _refreshTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromMilliseconds(RefreshDelay)
         };
+
+        _gcHandle = MemoUtilities.StartPeriodicGC(true);
+        InitializeWindow();
+    }
+
+    private void InitializeWindow()
+    {
         _refreshTimer.Tick += RefreshTimerTick;
         _refreshTimer.Start();
+
+        Loaded += OnLoaded;
+        MouseLeftButtonDown += (_, _) => DragMove();
+    }
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        Left = SystemParameters.WorkArea.Width - Width - 10;
+        Top = SystemParameters.WorkArea.Height - Height - 10;
+        Visibility = Visibility.Collapsed;
+
+        Startup.IsChecked = ShortcutUtilities.IsStartup();
     }
 
     private void RefreshTimerTick(object? sender, EventArgs e)
@@ -78,48 +76,30 @@ public partial class MainWindow
     {
         var isChineseMode = (conversionMode & ImeCmoDeNative) != 0;
 
-        var point = GetCursorPosition();
-        Left = point.Item1;
-        Top = point.Item2;
+        var cursorPos = GetCursorPosition();
+        Left = cursorPos.Item1;
+        Top = cursorPos.Item2;
 
         LangTxt.Text = isChineseMode ? "中" : "英";
-        LangTxt.Foreground = new SolidColorBrush(isChineseMode ? Colors.LightGreen : Colors.White);
+        LangTxt.Foreground = isChineseMode ? ChineseBrush : EnglishBrush;
 
+        // 动画显示
         Visibility = Visibility.Visible;
         LangIndicator.Opacity = 0;
         LangTxt.Opacity = 0;
-
-        var easing = new CircleEase
+        var duration = TimeSpan.FromMilliseconds(AnimationDuration);
+        var txtOpacity = new DoubleAnimation(0, 1, duration) { FillBehavior = FillBehavior.HoldEnd };
+        var windowOpacity = new DoubleAnimation(0, 1, duration) { FillBehavior = FillBehavior.HoldEnd };
+        var windowMotion = new DoubleAnimation(Top + 10, Top, duration)
         {
-            EasingMode = EasingMode.EaseInOut
-        };
-        var txtOpacity = new DoubleAnimation
-        {
-            From = 0,
-            To = 1,
-            Duration = TimeSpan.FromMilliseconds(AnimationDuration),
-            FillBehavior = FillBehavior.HoldEnd
-        };
-        var windowOpacity = new DoubleAnimation
-        {
-            From = 0,
-            To = 1,
-            Duration = TimeSpan.FromMilliseconds(AnimationDuration),
-            FillBehavior = FillBehavior.HoldEnd
-        };
-        var windowMotion = new DoubleAnimation
-        {
-            From = Top + 10,
-            To = Top,
-            EasingFunction = easing,
-            Duration = TimeSpan.FromMilliseconds(AnimationDuration),
+            EasingFunction = CircleEaseAnimation,
             FillBehavior = FillBehavior.Stop
         };
         LangTxt.BeginAnimation(OpacityProperty, txtOpacity);
         LangIndicator.BeginAnimation(OpacityProperty, windowOpacity);
         LangIndicator.BeginAnimation(TopProperty, windowMotion);
 
-        _hiddenTimer?.Change(HiddenDelay, Timeout.Infinite);
+        _hiddenTimer.Change(HiddenDelay, Timeout.Infinite);
     }
 
     private void HideHandle(object? state)
@@ -132,38 +112,32 @@ public partial class MainWindow
         });
     }
 
-    private ValueTuple<double, double> GetCursorPosition()
+    private (double, double) GetCursorPosition()
     {
         GetCursorPos(out var point);
 
         var source = PresentationSource.FromVisual(Application.Current.MainWindow!);
-        if (source?.CompositionTarget == null) return new ValueTuple<double, double>(point.X, point.Y);
+        if (source?.CompositionTarget == null) return (point.X, point.Y);
         var transformToDevice = source.CompositionTarget.TransformToDevice;
 
         var x = point.X / transformToDevice.M11;
         var y = point.Y / transformToDevice.M22;
 
-        // 获取屏幕工作区的宽度和高度
+        // 确保窗口不会超出屏幕边界
         var screenWidth = SystemParameters.WorkArea.Width;
         var screenHeight = SystemParameters.WorkArea.Height;
 
-        // 判断是否到达屏幕右下方边缘
-        if (x + Width > screenWidth)
-        {
-            x = screenWidth - Width;
-        }
+        x = Math.Min(screenWidth - Width, x);
+        y = Math.Min(screenHeight - Height, y);
 
-        if (y + Height > screenHeight)
-        {
-            y = screenHeight - Height;
-        }
-
-        return new ValueTuple<double, double>(x, y);
+        return (x, y);
     }
 
     protected override void OnClosed(EventArgs e)
     {
+        _hiddenTimer.Dispose();
         _refreshTimer.Stop();
+        _gcHandle.Dispose();
         base.OnClosed(e);
     }
 
