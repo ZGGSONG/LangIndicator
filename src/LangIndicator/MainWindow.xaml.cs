@@ -121,9 +121,10 @@ public partial class MainWindow
     private void UpdateIndicatorText(int conversionMode, int capsLock)
     {
         var isChineseMode = (conversionMode & IME_CMODE_NATIVE) != 0;
+        var isFullShape = (conversionMode & IME_CMODE_FULLSHAPE) != 0;
         var isUpperCase = capsLock != 0;
 
-        LangTxt.Text = isUpperCase ? "A" : (isChineseMode ? "中" : "英");
+        LangTxt.Text = isUpperCase ? "A" : (isChineseMode ? $"中" : "英") + (ShowShape.IsChecked ? $"/{(isFullShape ? "●" : "◗")}" : "");
         LangTxt.Foreground = isUpperCase ? UpperCaseBrush : (isChineseMode ? ChineseBrush : EnglishBrush);
     }
 
@@ -220,6 +221,11 @@ public partial class MainWindow
             ShortcutUtilities.SetStartup();
             Startup.IsChecked = true;
         }
+    }
+
+    private void ShowShape_Click(object sender, RoutedEventArgs e)
+    {
+        ShowShape.IsChecked = !ShowShape.IsChecked;
     }
 
     private void Exit_Click(object sender, RoutedEventArgs e)
