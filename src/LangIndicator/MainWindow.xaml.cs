@@ -35,7 +35,7 @@ public partial class MainWindow
     private static readonly SolidColorBrush EnglishBrush = new(Colors.White);
     private static readonly CircleEase CircleEaseAnimation = new() { EasingMode = EasingMode.EaseInOut };
 
-    private readonly Dictionary<StorageMsg, int> StorageDic = new()
+    private readonly Dictionary<StorageMsg, int> _storageDic = new()
     {
         { StorageMsg.ConversionMode, -1 },
         { StorageMsg.CapsLock, -1 },
@@ -60,7 +60,6 @@ public partial class MainWindow
             FillBehavior = FillBehavior.Stop
         };
 
-
         _hiddenTimer = new Timer(HideHandle, null, Timeout.Infinite, Timeout.Infinite);
         _refreshTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
@@ -82,8 +81,8 @@ public partial class MainWindow
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        Left = SystemParameters.WorkArea.Width - Width - 10;
-        Top = SystemParameters.WorkArea.Height - Height - 10;
+        Left = SystemParameters.WorkArea.Width - Width - Constant.WindowOffset;
+        Top = SystemParameters.WorkArea.Height - Height - Constant.WindowOffset;
         Visibility = Visibility.Collapsed;
 
         Startup.IsChecked = ShortcutUtilities.IsStartup();
@@ -99,12 +98,11 @@ public partial class MainWindow
         try
         {
             var (conversionMode, capsLock) = (GetImeConversionMode(), GetCapsLockState());
-            if (conversionMode == StorageDic[StorageMsg.ConversionMode]
-            && capsLock == StorageDic[StorageMsg.CapsLock])
+            if (conversionMode == _storageDic[StorageMsg.ConversionMode] && capsLock == _storageDic[StorageMsg.CapsLock])
                 return;
 
-            StorageDic[StorageMsg.ConversionMode] = conversionMode;
-            StorageDic[StorageMsg.CapsLock] = capsLock;
+            _storageDic[StorageMsg.ConversionMode] = conversionMode;
+            _storageDic[StorageMsg.CapsLock] = capsLock;
             UpdateDisplay(conversionMode, capsLock);
         }
         catch (Exception ex)
@@ -132,7 +130,7 @@ public partial class MainWindow
         var isFullShape = (conversionMode & IME_CMODE_FULLSHAPE) != 0;
         var isUpperCase = capsLock != 0;
 
-        LangTxt.Text = isUpperCase ? "A" : (isChineseMode ? $"中" : "英") + (ShowShape.IsChecked ? $" /{(isFullShape ? "●" : "◗")}" : "");
+        LangTxt.Text = isUpperCase ? "A" : (isChineseMode ? "中" : "英") + (ShowShape.IsChecked ? $" /{(isFullShape ? "●" : "◗")}" : "");
         LangTxt.Foreground = isUpperCase ? UpperCaseBrush : (isChineseMode ? ChineseBrush : EnglishBrush);
     }
 
@@ -182,7 +180,7 @@ public partial class MainWindow
     }
 
     /// <summary>
-    ///     获取大写锁定键状态
+    /// 获取大写锁定键状态
     /// </summary>
     /// <returns></returns>
     public static int GetCapsLockState()
@@ -191,7 +189,7 @@ public partial class MainWindow
     }
 
     /// <summary>
-    ///     获取当前输入法的转换模式
+    /// 获取当前输入法的转换模式
     /// </summary>
     public static int GetImeConversionMode()
     {
@@ -219,14 +217,9 @@ public partial class MainWindow
 
     private void InitializeConfig()
     {
-        if (!bool.TryParse(ConfigurationManager.AppSettings.Get("IsStartup"), out Config.IsStartup))
-        {
-            Config.IsStartup = false;
-        }
-        if (!bool.TryParse(ConfigurationManager.AppSettings.Get("IsShowFullShape"), out Config.IsShowFullShape))
-        {
-            Config.IsShowFullShape = false;
-        }
+        Config.IsStartup = bool.TryParse(ConfigurationManager.AppSettings.Get("IsStartup"), out var isStartup) && isStartup;
+        Config.IsShowFullShape = bool.TryParse(ConfigurationManager.AppSettings.Get("IsShowFullShape"), out var isShowFullShape) && isShowFullShape;
+
         if (Config.IsStartup && !ShortcutUtilities.IsStartup())
         {
             ShortcutUtilities.SetStartup();
@@ -238,8 +231,18 @@ public partial class MainWindow
     private void SaveConfig()
     {
         var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-        config.AppSettings.Settings["IsStartup"].Value = Config.IsStartup.ToString();
-        config.AppSettings.Settings["IsShowFullShape"].Value = Config.IsShowFullShape.ToString();
+        var settings = config.AppSettings.Settings;
+
+        if (settings["IsStartup"] != null)
+            settings["IsStartup"].Value = Config.IsStartup.ToString();
+        else
+            settings.Add("IsStartup", Config.IsStartup.ToString());
+
+        if (settings["IsShowFullShape"] != null)
+            settings["IsShowFullShape"].Value = Config.IsShowFullShape.ToString();
+        else
+            settings.Add("IsShowFullShape", Config.IsShowFullShape.ToString());
+
         config.Save(ConfigurationSaveMode.Modified);
         ConfigurationManager.RefreshSection("appSettings");
     }
@@ -281,17 +284,17 @@ public partial class MainWindow
     #region Win32 API
 
     /// <summary>
-    ///     应用程序使用此消息来控制已创建的 IME 窗口
+    /// 应用程序使用此消息来控制已创建的 IME 窗口
     /// </summary>
     private const int WM_IME_CONTROL = 0x283;
 
     /// <summary>
-    ///     大写锁定键
+    /// 大写锁定键
     /// </summary>
     private const int VK_CAPITAL = 0x14;
 
     /// <summary>
-    ///     输入法管理器命令
+    /// 输入法管理器命令
     /// </summary>
     private const int IMC_GETCONVERSIONMODE = 0x001;
 
