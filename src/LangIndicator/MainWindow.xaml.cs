@@ -64,14 +64,10 @@ public partial class MainWindow
 
     private void CheckImeStatus()
     {
-        var foregroundWindow = GetForegroundWindow();
-        if (foregroundWindow == IntPtr.Zero) return;
-        var defaultImeWnd = ImmGetDefaultIMEWnd(foregroundWindow);
-        if (defaultImeWnd == IntPtr.Zero) return;
-        // 发送消息获取转换模式
-        var conversionMode = SendMessage(defaultImeWnd, WM_IME_CONTROL, new IntPtr(ImcGetConversionMode), IntPtr.Zero).ToInt32();
-        var capsLock = CapsLockState();
-        if (conversionMode == StorageDic[StorageMsg.ConversionMode] && capsLock == StorageDic[StorageMsg.CapsLock])
+        var conversionMode = GetImeConversionMode();
+        var capsLock = GetCapsLockState();
+        if (conversionMode == StorageDic[StorageMsg.ConversionMode]
+            && capsLock == StorageDic[StorageMsg.CapsLock])
             return;
         StorageDic[StorageMsg.ConversionMode] = conversionMode;
         StorageDic[StorageMsg.CapsLock] = capsLock;
@@ -83,7 +79,7 @@ public partial class MainWindow
         var isChineseMode = (conversionMode & IME_CMODE_NATIVE) != 0;
         var isFullShape = (conversionMode & IME_CMODE_FULLSHAPE) != 0;
         var isUpperCase = capsLock != 0;
-        System.Diagnostics.Debug.WriteLine($"conversionMode: {conversionMode}, 全半角: {isFullShape},大小写: {isUpperCase}");
+        //System.Diagnostics.Debug.WriteLine($"转换模式: {conversionMode}, 全半角: {isFullShape}, 大小写: {isUpperCase}");
 
         var cursorPos = GetCursorPosition();
         Left = cursorPos.Item1;
@@ -150,11 +146,30 @@ public partial class MainWindow
         return (x, y);
     }
 
-
-    public static int CapsLockState()
+    /// <summary>
+    ///     获取大写锁定键状态
+    /// </summary>
+    /// <returns></returns>
+    public static int GetCapsLockState()
     {
-        // 0x0001 表示切换键处于开启状态
         return GetKeyState(VK_CAPITAL) & 0x0001;
+    }
+
+    /// <summary>
+    ///     获取当前输入法的转换模式
+    /// </summary>
+    public static int GetImeConversionMode()
+    {
+        var foregroundWindow = GetForegroundWindow();
+        if (foregroundWindow == IntPtr.Zero)
+            return 0;
+
+        var imeWnd = ImmGetDefaultIMEWnd(foregroundWindow);
+        if (imeWnd == IntPtr.Zero)
+            return 0;
+
+        var result = SendMessage(imeWnd, WM_IME_CONTROL, new IntPtr(IMC_GETCONVERSIONMODE), IntPtr.Zero);
+        return result.ToInt32();
     }
 
     protected override void OnClosed(EventArgs e)
@@ -201,32 +216,24 @@ public partial class MainWindow
     private const int VK_CAPITAL = 0x14;
 
     /// <summary>
-    ///     输入法管理器消息
+    ///     输入法管理器命令
     /// </summary>
-    private const int ImcGetConversionMode = 0x001;
+    private const int IMC_GETCONVERSIONMODE = 0x001;
 
     #region IGP_CONVERSION
     // https://www.cnblogs.com/zyl910/archive/2006/06/04/2186644.html
 
-    /// <summary>
-    ///     本地语言输入。MSDN: Set to 1 if NATIVE mode; 0 if ALPHANUMERIC mode.
-    /// </summary>
-    private const int IME_CMODE_NATIVE = 0x1;
-
-    /// <summary>
-    ///     全角/半角。MSDN: Set to 1 if full shape mode; 0 if half shape mode.
-    /// </summary>
-    private const int IME_CMODE_FULLSHAPE = 0x8;
-
-    /// <summary>
-    ///     繁体中文。自定义常量。
-    /// </summary>
-    private const int IME_CMODE_TRADITIONAL_CHINESE = 0x10;
-
-    /// <summary>
-    ///     英文大写。自定义常量。
-    /// </summary>
-    private const int IME_CMODE_UPPERCASE = 0x20;
+    private const int IME_CMODE_CHINESE = 0x1;          // 中文输入
+    private const int IME_CMODE_NATIVE = 0x1;           // 等同于 CHINESE
+    private const int IME_CMODE_FULLSHAPE = 0x8;        // 全角
+    private const int IME_CMODE_ROMAN = 0x10;           // 罗马字
+    private const int IME_CMODE_CHARCODE = 0x20;        // 字符码
+    private const int IME_CMODE_HANJACONVERT = 0x40;    // 汉字转换
+    private const int IME_CMODE_SOFTKBD = 0x80;         // 软键盘
+    private const int IME_CMODE_NOCONVERSION = 0x100;   // 无转换
+    private const int IME_CMODE_EUDC = 0x200;           // 用户自定义字符
+    private const int IME_CMODE_SYMBOL = 0x400;         // 符号转换
+    private const int IME_CMODE_FIXED = 0x800;          // 固定转换
 
     #endregion
 
