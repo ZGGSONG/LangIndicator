@@ -8,31 +8,55 @@ namespace LangIndicator;
 
 public partial class MainWindow
 {
+    // 使用常量定义配置参数，便于维护
+    private static class Config
+    {
+        public const int HiddenDelay = 1000;
+        public const int RefreshDelay = 100;
+        public const int AnimationDuration = 200;
+        public const double WindowOffset = 10.0;
+    }
+
+    // 缓存动画对象以提高性能
+    private readonly DoubleAnimation _txtOpacityAnimation;
+    private readonly DoubleAnimation _windowOpacityAnimation;
+    private readonly DoubleAnimation _windowMotionAnimation;
+
+    // 缓存常用的画笔和动画
+    private static readonly SolidColorBrush UpperCaseBrush = new(Colors.LightSalmon);
+    private static readonly SolidColorBrush ChineseBrush = new(Colors.LightGreen);
+    private static readonly SolidColorBrush EnglishBrush = new(Colors.White);
+    private static readonly CircleEase CircleEaseAnimation = new() { EasingMode = EasingMode.EaseInOut };
+
     private readonly Dictionary<StorageMsg, int> StorageDic = new()
     {
         { StorageMsg.ConversionMode, -1 },
         { StorageMsg.CapsLock, -1 },
     };
-    private const int HiddenDelay = 1000;
-    private const int RefreshDelay = 100;
-    private const int AnimationDuration = 200;
     private readonly Timer _hiddenTimer;
     private readonly DispatcherTimer _refreshTimer;
     private readonly IDisposable _gcHandle;
 
-    // 缓存常用的画笔和动画
-    private static readonly SolidColorBrush ChineseBrush = new(Colors.LightGreen);
-    private static readonly SolidColorBrush EnglishBrush = new(Colors.White);
-    private static readonly CircleEase CircleEaseAnimation = new() { EasingMode = EasingMode.EaseInOut };
-    private static readonly SolidColorBrush UpperCaseBrush = new(Colors.Orange);
-
     public MainWindow()
     {
         InitializeComponent();
+
+        // 初始化动画对象
+        var duration = TimeSpan.FromMilliseconds(Config.AnimationDuration);
+        _txtOpacityAnimation = new DoubleAnimation(0, 1, duration) { FillBehavior = FillBehavior.HoldEnd };
+        _windowOpacityAnimation = new DoubleAnimation(0, 1, duration) { FillBehavior = FillBehavior.HoldEnd };
+        _windowMotionAnimation = new DoubleAnimation
+        {
+            Duration = duration,
+            EasingFunction = CircleEaseAnimation,
+            FillBehavior = FillBehavior.Stop
+        };
+
+
         _hiddenTimer = new Timer(HideHandle, null, Timeout.Infinite, Timeout.Infinite);
         _refreshTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
-            Interval = TimeSpan.FromMilliseconds(RefreshDelay)
+            Interval = TimeSpan.FromMilliseconds(Config.RefreshDelay)
         };
 
         _gcHandle = MemoUtilities.StartPeriodicGC(true);
@@ -64,55 +88,57 @@ public partial class MainWindow
 
     private void CheckImeStatus()
     {
-        var conversionMode = GetImeConversionMode();
-        var capsLock = GetCapsLockState();
-        if (conversionMode == StorageDic[StorageMsg.ConversionMode]
+        try
+        {
+            var (conversionMode, capsLock) = (GetImeConversionMode(), GetCapsLockState());
+            if (conversionMode == StorageDic[StorageMsg.ConversionMode]
             && capsLock == StorageDic[StorageMsg.CapsLock])
-            return;
-        StorageDic[StorageMsg.ConversionMode] = conversionMode;
-        StorageDic[StorageMsg.CapsLock] = capsLock;
-        UpdateDisplay(conversionMode, capsLock);
+                return;
+
+            StorageDic[StorageMsg.ConversionMode] = conversionMode;
+            StorageDic[StorageMsg.CapsLock] = capsLock;
+            UpdateDisplay(conversionMode, capsLock);
+        }
+        catch (Exception ex)
+        {
+            // 可以添加日志记录
+            System.Diagnostics.Debug.WriteLine($"Error checking IME status: {ex.Message}");
+        }
     }
 
     private void UpdateDisplay(int conversionMode, int capsLock)
     {
+        var (x, y) = GetCursorPosition();
+        Left = x;
+        Top = y;
+
+        UpdateIndicatorText(conversionMode, capsLock);
+        ShowAnimations(y);
+
+        _hiddenTimer.Change(Config.HiddenDelay, Timeout.Infinite);
+    }
+
+    private void UpdateIndicatorText(int conversionMode, int capsLock)
+    {
         var isChineseMode = (conversionMode & IME_CMODE_NATIVE) != 0;
-        var isFullShape = (conversionMode & IME_CMODE_FULLSHAPE) != 0;
         var isUpperCase = capsLock != 0;
-        //System.Diagnostics.Debug.WriteLine($"转换模式: {conversionMode}, 全半角: {isFullShape}, 大小写: {isUpperCase}");
 
-        var cursorPos = GetCursorPosition();
-        Left = cursorPos.Item1;
-        Top = cursorPos.Item2;
+        LangTxt.Text = isUpperCase ? "A" : (isChineseMode ? "中" : "英");
+        LangTxt.Foreground = isUpperCase ? UpperCaseBrush : (isChineseMode ? ChineseBrush : EnglishBrush);
+    }
 
-        if (isUpperCase)
-        {
-            LangTxt.Text = "EN";
-            LangTxt.Foreground = UpperCaseBrush;
-        }
-        else
-        {
-            LangTxt.Text = isChineseMode ? "中" : "英";
-            LangTxt.Foreground = isChineseMode ? ChineseBrush : EnglishBrush;
-        }
-
-        // 动画显示
+    private void ShowAnimations(double targetTop)
+    {
         Visibility = Visibility.Visible;
         LangIndicator.Opacity = 0;
         LangTxt.Opacity = 0;
-        var duration = TimeSpan.FromMilliseconds(AnimationDuration);
-        var txtOpacity = new DoubleAnimation(0, 1, duration) { FillBehavior = FillBehavior.HoldEnd };
-        var windowOpacity = new DoubleAnimation(0, 1, duration) { FillBehavior = FillBehavior.HoldEnd };
-        var windowMotion = new DoubleAnimation(Top + 10, Top, duration)
-        {
-            EasingFunction = CircleEaseAnimation,
-            FillBehavior = FillBehavior.Stop
-        };
-        LangTxt.BeginAnimation(OpacityProperty, txtOpacity);
-        LangIndicator.BeginAnimation(OpacityProperty, windowOpacity);
-        LangIndicator.BeginAnimation(TopProperty, windowMotion);
 
-        _hiddenTimer.Change(HiddenDelay, Timeout.Infinite);
+        _windowMotionAnimation.From = targetTop + Config.WindowOffset;
+        _windowMotionAnimation.To = targetTop;
+
+        LangTxt.BeginAnimation(OpacityProperty, _txtOpacityAnimation);
+        LangIndicator.BeginAnimation(OpacityProperty, _windowOpacityAnimation);
+        LangIndicator.BeginAnimation(TopProperty, _windowMotionAnimation);
     }
 
     private void HideHandle(object? state)
