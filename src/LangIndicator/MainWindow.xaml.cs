@@ -8,7 +8,11 @@ namespace LangIndicator;
 
 public partial class MainWindow
 {
-    private int _lastConversionMode = -1;
+    private readonly Dictionary<StorageMsg, int> StorageDic = new()
+    {
+        { StorageMsg.ConversionMode, -1 },
+        { StorageMsg.CapsLock, -1 },
+    };
     private const int HiddenDelay = 1000;
     private const int RefreshDelay = 100;
     private const int AnimationDuration = 200;
@@ -20,7 +24,7 @@ public partial class MainWindow
     private static readonly SolidColorBrush ChineseBrush = new(Colors.LightGreen);
     private static readonly SolidColorBrush EnglishBrush = new(Colors.White);
     private static readonly CircleEase CircleEaseAnimation = new() { EasingMode = EasingMode.EaseInOut };
-
+    private static readonly SolidColorBrush UpperCaseBrush = new(Colors.Orange);
 
     public MainWindow()
     {
@@ -43,6 +47,7 @@ public partial class MainWindow
         Loaded += OnLoaded;
         MouseLeftButtonDown += (_, _) => DragMove();
     }
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         Left = SystemParameters.WorkArea.Width - Width - 10;
@@ -64,23 +69,36 @@ public partial class MainWindow
         var defaultImeWnd = ImmGetDefaultIMEWnd(foregroundWindow);
         if (defaultImeWnd == IntPtr.Zero) return;
         // 发送消息获取转换模式
-        var result = SendMessage(defaultImeWnd, WmImeControl, new IntPtr(ImcGetConversionMode), IntPtr.Zero);
-        var conversionMode = result.ToInt32();
-        if (conversionMode == _lastConversionMode) return;
-        _lastConversionMode = conversionMode;
-        UpdateDisplay(conversionMode);
+        var conversionMode = SendMessage(defaultImeWnd, WM_IME_CONTROL, new IntPtr(ImcGetConversionMode), IntPtr.Zero).ToInt32();
+        var capsLock = CapsLockState();
+        if (conversionMode == StorageDic[StorageMsg.ConversionMode] && capsLock == StorageDic[StorageMsg.CapsLock])
+            return;
+        StorageDic[StorageMsg.ConversionMode] = conversionMode;
+        StorageDic[StorageMsg.CapsLock] = capsLock;
+        UpdateDisplay(conversionMode, capsLock);
     }
 
-    private void UpdateDisplay(int conversionMode)
+    private void UpdateDisplay(int conversionMode, int capsLock)
     {
-        var isChineseMode = (conversionMode & ImeCmoDeNative) != 0;
+        var isChineseMode = (conversionMode & IME_CMODE_NATIVE) != 0;
+        var isFullShape = (conversionMode & IME_CMODE_FULLSHAPE) != 0;
+        var isUpperCase = capsLock != 0;
+        System.Diagnostics.Debug.WriteLine($"conversionMode: {conversionMode}, 全半角: {isFullShape},大小写: {isUpperCase}");
 
         var cursorPos = GetCursorPosition();
         Left = cursorPos.Item1;
         Top = cursorPos.Item2;
 
-        LangTxt.Text = isChineseMode ? "中" : "英";
-        LangTxt.Foreground = isChineseMode ? ChineseBrush : EnglishBrush;
+        if (isUpperCase)
+        {
+            LangTxt.Text = "EN";
+            LangTxt.Foreground = UpperCaseBrush;
+        }
+        else
+        {
+            LangTxt.Text = isChineseMode ? "中" : "英";
+            LangTxt.Foreground = isChineseMode ? ChineseBrush : EnglishBrush;
+        }
 
         // 动画显示
         Visibility = Visibility.Visible;
@@ -132,6 +150,13 @@ public partial class MainWindow
         return (x, y);
     }
 
+
+    public static int CapsLockState()
+    {
+        // 0x0001 表示切换键处于开启状态
+        return GetKeyState(VK_CAPITAL) & 0x0001;
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         _hiddenTimer.Dispose();
@@ -165,9 +190,45 @@ public partial class MainWindow
 
     #region Win32 API
 
-    private const int WmImeControl = 0x283;
+    /// <summary>
+    ///     应用程序使用此消息来控制已创建的 IME 窗口
+    /// </summary>
+    private const int WM_IME_CONTROL = 0x283;
+
+    /// <summary>
+    ///     大写锁定键
+    /// </summary>
+    private const int VK_CAPITAL = 0x14;
+
+    /// <summary>
+    ///     输入法管理器消息
+    /// </summary>
     private const int ImcGetConversionMode = 0x001;
-    private const int ImeCmoDeNative = 0x1;
+
+    #region IGP_CONVERSION
+    // https://www.cnblogs.com/zyl910/archive/2006/06/04/2186644.html
+
+    /// <summary>
+    ///     本地语言输入。MSDN: Set to 1 if NATIVE mode; 0 if ALPHANUMERIC mode.
+    /// </summary>
+    private const int IME_CMODE_NATIVE = 0x1;
+
+    /// <summary>
+    ///     全角/半角。MSDN: Set to 1 if full shape mode; 0 if half shape mode.
+    /// </summary>
+    private const int IME_CMODE_FULLSHAPE = 0x8;
+
+    /// <summary>
+    ///     繁体中文。自定义常量。
+    /// </summary>
+    private const int IME_CMODE_TRADITIONAL_CHINESE = 0x10;
+
+    /// <summary>
+    ///     英文大写。自定义常量。
+    /// </summary>
+    private const int IME_CMODE_UPPERCASE = 0x20;
+
+    #endregion
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
@@ -178,6 +239,8 @@ public partial class MainWindow
     [DllImport("user32.dll")]
     private static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
+    [DllImport("user32.dll")]
+    public static extern int GetKeyState(int vKey);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Point(int x, int y)
@@ -191,4 +254,10 @@ public partial class MainWindow
     private static extern bool GetCursorPos(out Point lpPoint);
 
     #endregion
+}
+
+public enum StorageMsg
+{
+    ConversionMode,
+    CapsLock,
 }
