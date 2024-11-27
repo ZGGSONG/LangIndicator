@@ -124,7 +124,7 @@ public partial class MainWindow
         var isFullShape = (conversionMode & IME_CMODE_FULLSHAPE) != 0;
         var isUpperCase = capsLock != 0;
 
-        LangTxt.Text = isUpperCase ? "A" : (isChineseMode ? $"中" : "英") + (ShowShape.IsChecked ? $"/{(isFullShape ? "●" : "◗")}" : "");
+        LangTxt.Text = isUpperCase ? "A" : (isChineseMode ? $"中" : "英") + (ShowShape.IsChecked ? $" /{(isFullShape ? "●" : "◗")}" : "");
         LangTxt.Foreground = isUpperCase ? UpperCaseBrush : (isChineseMode ? ChineseBrush : EnglishBrush);
     }
 
