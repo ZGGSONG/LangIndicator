@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Configuration;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -8,8 +9,14 @@ namespace LangIndicator;
 
 public partial class MainWindow
 {
+    public static class Config
+    {
+        public static bool IsStartup;
+        public static bool IsShowFullShape;
+    }
+
     // 使用常量定义配置参数，便于维护
-    private static class Config
+    private static class Constant
     {
         public const int HiddenDelay = 1000;
         public const int RefreshDelay = 100;
@@ -40,9 +47,10 @@ public partial class MainWindow
     public MainWindow()
     {
         InitializeComponent();
+        InitializeConfig();
 
         // 初始化动画对象
-        var duration = TimeSpan.FromMilliseconds(Config.AnimationDuration);
+        var duration = TimeSpan.FromMilliseconds(Constant.AnimationDuration);
         _txtOpacityAnimation = new DoubleAnimation(0, 1, duration) { FillBehavior = FillBehavior.HoldEnd };
         _windowOpacityAnimation = new DoubleAnimation(0, 1, duration) { FillBehavior = FillBehavior.HoldEnd };
         _windowMotionAnimation = new DoubleAnimation
@@ -56,7 +64,7 @@ public partial class MainWindow
         _hiddenTimer = new Timer(HideHandle, null, Timeout.Infinite, Timeout.Infinite);
         _refreshTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
-            Interval = TimeSpan.FromMilliseconds(Config.RefreshDelay)
+            Interval = TimeSpan.FromMilliseconds(Constant.RefreshDelay)
         };
 
         _gcHandle = MemoUtilities.StartPeriodicGC(true);
@@ -115,7 +123,7 @@ public partial class MainWindow
         UpdateIndicatorText(conversionMode, capsLock);
         ShowAnimations(y);
 
-        _hiddenTimer.Change(Config.HiddenDelay, Timeout.Infinite);
+        _hiddenTimer.Change(Constant.HiddenDelay, Timeout.Infinite);
     }
 
     private void UpdateIndicatorText(int conversionMode, int capsLock)
@@ -134,7 +142,7 @@ public partial class MainWindow
         LangIndicator.Opacity = 0;
         LangTxt.Opacity = 0;
 
-        _windowMotionAnimation.From = targetTop + Config.WindowOffset;
+        _windowMotionAnimation.From = targetTop + Constant.WindowOffset;
         _windowMotionAnimation.To = targetTop;
 
         LangTxt.BeginAnimation(OpacityProperty, _txtOpacityAnimation);
@@ -207,6 +215,37 @@ public partial class MainWindow
         base.OnClosed(e);
     }
 
+    #region Configuration
+
+    private void InitializeConfig()
+    {
+        if (!bool.TryParse(ConfigurationManager.AppSettings.Get("IsStartup"), out Config.IsStartup))
+        {
+            Config.IsStartup = false;
+        }
+        if (!bool.TryParse(ConfigurationManager.AppSettings.Get("IsShowFullShape"), out Config.IsShowFullShape))
+        {
+            Config.IsShowFullShape = false;
+        }
+        if (Config.IsStartup && !ShortcutUtilities.IsStartup())
+        {
+            ShortcutUtilities.SetStartup();
+        }
+        Startup.IsChecked = Config.IsStartup;
+        ShowShape.IsChecked = Config.IsShowFullShape;
+    }
+
+    private void SaveConfig()
+    {
+        var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+        config.AppSettings.Settings["IsStartup"].Value = Config.IsStartup.ToString();
+        config.AppSettings.Settings["IsShowFullShape"].Value = Config.IsShowFullShape.ToString();
+        config.Save(ConfigurationSaveMode.Modified);
+        ConfigurationManager.RefreshSection("appSettings");
+    }
+
+    #endregion
+
     #region NotiryIcon
 
     private void Startup_OnClick(object sender, RoutedEventArgs e)
@@ -221,11 +260,15 @@ public partial class MainWindow
             ShortcutUtilities.SetStartup();
             Startup.IsChecked = true;
         }
+        Config.IsStartup = Startup.IsChecked;
+        SaveConfig();
     }
 
     private void ShowShape_Click(object sender, RoutedEventArgs e)
     {
         ShowShape.IsChecked = !ShowShape.IsChecked;
+        Config.IsShowFullShape = ShowShape.IsChecked;
+        SaveConfig();
     }
 
     private void Exit_Click(object sender, RoutedEventArgs e)

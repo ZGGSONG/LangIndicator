@@ -7,6 +7,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
+        <PlatformTarget>x64</PlatformTarget>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <ApplicationIcon>Assets\favicon.ico</ApplicationIcon>
         <AssemblyVersion>0.0.1</AssemblyVersion>
@@ -23,18 +24,22 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Remove="Assets\favicon.ico"/>
-        <None Remove="Assets\favicon.png"/>
+        <None Remove="Assets\favicon.ico" />
+        <None Remove="Assets\favicon.png" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1"/>
-        <PackageReference Include="System.Private.Uri" Version="4.3.2"/>
+        <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
+        <PackageReference Include="System.Private.Uri" Version="4.3.2" />
     </ItemGroup>
 
     <ItemGroup>
-        <Resource Include="Assets\favicon.ico"/>
-        <Resource Include="Assets\favicon.png"/>
+      <Reference Include="System.Configuration" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Include="Assets\favicon.ico" />
+        <Resource Include="Assets\favicon.png" />
     </ItemGroup>
 
 </Project>
