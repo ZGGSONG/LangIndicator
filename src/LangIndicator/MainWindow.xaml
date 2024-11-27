@@ -36,6 +36,11 @@
                         Name="Startup"
                         Click="Startup_OnClick"
                         Header="开机启动" />
+                    <Separator />
+                    <MenuItem
+                        Name="ShowSymbol"
+                        Click="ShowSymbol_Click"
+                        Header="中文标点" />
                     <MenuItem
                         Name="ShowShape"
                         Click="ShowShape_Click"

@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -13,9 +14,9 @@ public partial class MainWindow
     {
         public static bool IsStartup;
         public static bool IsShowFullShape;
+        public static bool IsShowSymbol;
     }
 
-    // 使用常量定义配置参数，便于维护
     private static class Constant
     {
         public const int HiddenDelay = 1000;
@@ -107,7 +108,6 @@ public partial class MainWindow
         }
         catch (Exception ex)
         {
-            // 可以添加日志记录
             System.Diagnostics.Debug.WriteLine($"Error checking IME status: {ex.Message}");
         }
     }
@@ -129,8 +129,11 @@ public partial class MainWindow
         var isChineseMode = (conversionMode & IME_CMODE_NATIVE) != 0;
         var isFullShape = (conversionMode & IME_CMODE_FULLSHAPE) != 0;
         var isUpperCase = capsLock != 0;
+        var isSymbolMode = (conversionMode & IME_CMODE_SYMBOL) != 0;
 
-        LangTxt.Text = isUpperCase ? "A" : (isChineseMode ? "中" : "英") + (ShowShape.IsChecked ? $" /{(isFullShape ? "●" : "◗")}" : "");
+        LangTxt.Text = $"{(isUpperCase ? "A" : (isChineseMode ? "中" : "英"))}" +
+                       $"{(ShowShape.IsChecked ? $" /{(isFullShape ? "⚈" : "◗")}" : "")}" +
+                       $"{(ShowSymbol.IsChecked ? $"{(isSymbolMode ? "/；" : "")}" : "")}";
         LangTxt.Foreground = isUpperCase ? UpperCaseBrush : (isChineseMode ? ChineseBrush : EnglishBrush);
     }
 
@@ -213,19 +216,24 @@ public partial class MainWindow
         base.OnClosed(e);
     }
 
-    #region Configuration
-
     private void InitializeConfig()
     {
-        Config.IsStartup = bool.TryParse(ConfigurationManager.AppSettings.Get("IsStartup"), out var isStartup) && isStartup;
-        Config.IsShowFullShape = bool.TryParse(ConfigurationManager.AppSettings.Get("IsShowFullShape"), out var isShowFullShape) && isShowFullShape;
+        Config.IsStartup = GetConfigValue("IsStartup");
+        Config.IsShowFullShape = GetConfigValue("IsShowFullShape");
+        Config.IsShowSymbol = GetConfigValue("IsShowSymbol");
 
         if (Config.IsStartup && !ShortcutUtilities.IsStartup())
         {
             ShortcutUtilities.SetStartup();
         }
         Startup.IsChecked = Config.IsStartup;
+        ShowSymbol.IsChecked = Config.IsShowSymbol;
         ShowShape.IsChecked = Config.IsShowFullShape;
+    }
+
+    private static bool GetConfigValue(string key)
+    {
+        return bool.TryParse(ConfigurationManager.AppSettings.Get(key), out var value) && value;
     }
 
     private void SaveConfig()
@@ -233,23 +241,21 @@ public partial class MainWindow
         var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
         var settings = config.AppSettings.Settings;
 
-        if (settings["IsStartup"] != null)
-            settings["IsStartup"].Value = Config.IsStartup.ToString();
-        else
-            settings.Add("IsStartup", Config.IsStartup.ToString());
-
-        if (settings["IsShowFullShape"] != null)
-            settings["IsShowFullShape"].Value = Config.IsShowFullShape.ToString();
-        else
-            settings.Add("IsShowFullShape", Config.IsShowFullShape.ToString());
+        SaveConfigValue(settings, "IsStartup", Config.IsStartup);
+        SaveConfigValue(settings, "IsShowSymbol", Config.IsShowSymbol);
+        SaveConfigValue(settings, "IsShowFullShape", Config.IsShowFullShape);
 
         config.Save(ConfigurationSaveMode.Modified);
         ConfigurationManager.RefreshSection("appSettings");
     }
 
-    #endregion
-
-    #region NotiryIcon
+    private static void SaveConfigValue(KeyValueConfigurationCollection settings, string key, bool value)
+    {
+        if (settings[key] != null)
+            settings[key].Value = value.ToString();
+        else
+            settings.Add(key, value.ToString());
+    }
 
     private void Startup_OnClick(object sender, RoutedEventArgs e)
     {
@@ -267,10 +273,20 @@ public partial class MainWindow
         SaveConfig();
     }
 
+    private void ShowSymbol_Click(object sender, RoutedEventArgs e)
+    {
+        ToggleConfigOption(ref Config.IsShowSymbol, ShowSymbol);
+    }
+
     private void ShowShape_Click(object sender, RoutedEventArgs e)
     {
-        ShowShape.IsChecked = !ShowShape.IsChecked;
-        Config.IsShowFullShape = ShowShape.IsChecked;
+        ToggleConfigOption(ref Config.IsShowFullShape, ShowShape);
+    }
+
+    private void ToggleConfigOption(ref bool configOption, MenuItem item)
+    {
+        item.IsChecked = !item.IsChecked;
+        configOption = item.IsChecked;
         SaveConfig();
     }
 
@@ -278,8 +294,6 @@ public partial class MainWindow
     {
         Close();
     }
-
-    #endregion
 
     #region Win32 API
 
@@ -328,16 +342,15 @@ public partial class MainWindow
     public static extern int GetKeyState(int vKey);
 
     [StructLayout(LayoutKind.Sequential)]
-    private struct Point(int x, int y)
+    private struct Point
     {
-        public int X = x;
-        public int Y = y;
+        public int X;
+        public int Y;
     }
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetCursorPos(out Point lpPoint);
-
     #endregion
 }
 
