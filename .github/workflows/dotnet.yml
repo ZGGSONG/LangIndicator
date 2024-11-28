@@ -27,7 +27,7 @@ jobs:
     - name: Setup
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '4.7.2'
+        dotnet-version: '4.7.*'
 
     - name: Publish
       run: |
