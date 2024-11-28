@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35514.174 d17.12
+VisualStudioVersion = 17.12.35514.174
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LangIndicator", "src\LangIndicator\LangIndicator.csproj", "{14B18DD2-DF92-445D-BD5D-D35EDA69FECE}"
 EndProject
@@ -10,6 +10,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "items", "items", "{306C11C5-B005-4878-B3C4-B7DD747D3A9A}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		7z.ps1 = 7z.ps1
+		CHANGELOG.md = CHANGELOG.md
+		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		LICENSE = LICENSE
+		publish.ps1 = publish.ps1
+		README.md = README.md
 	EndProjectSection
 EndProject
 Global
