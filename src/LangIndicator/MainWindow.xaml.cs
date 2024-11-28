@@ -134,7 +134,7 @@ public partial class MainWindow
 
         LangTxt.Text = $"{(isUpperCase ? "A" : (isChineseMode ? "中" : "英"))}" +
                        $"{(ShowShape.IsChecked ? $" /{(isFullShape ? "⚈" : "◗")}" : "")}" +
-                       $"{(ShowSymbol.IsChecked ? $"{(isSymbolMode ? "/；" : "")}" : "")}";
+                       $"{(isUpperCase ? "" : (ShowSymbol.IsChecked ? $"{(isSymbolMode ? "/；" : "")}" : ""))}";
         LangTxt.Foreground = isUpperCase ? UpperCaseBrush : (isChineseMode ? ChineseBrush : EnglishBrush);
     }
 
