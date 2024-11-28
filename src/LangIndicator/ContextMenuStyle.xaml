@@ -94,6 +94,30 @@
                                 VerticalAlignment="Center"
                                 Data="M0,0 L4,4 0,8 z"
                                 Fill="{TemplateBinding Foreground}" />
+
+                            <!--  添加 Popup 控件  -->
+                            <Popup
+                                x:Name="PART_Popup"
+                                AllowsTransparency="True"
+                                Focusable="False"
+                                IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                Placement="Right"
+                                PopupAnimation="Fade">
+                                <Border
+                                    Padding="2"
+                                    Background="{StaticResource MenuBackground}"
+                                    BorderBrush="{StaticResource MenuBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="4">
+                                    <Border.Effect>
+                                        <DropShadowEffect
+                                            BlurRadius="8"
+                                            Opacity="0.2"
+                                            ShadowDepth="1" />
+                                    </Border.Effect>
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                </Border>
+                            </Popup>
                         </Grid>
                     </Border>
 

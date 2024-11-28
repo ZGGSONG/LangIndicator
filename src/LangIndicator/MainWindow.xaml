@@ -45,6 +45,40 @@
                         Name="ShowShape"
                         Click="ShowShape_Click"
                         Header="全角半角" />
+                    <MenuItem Header="隐藏时间">
+                        <MenuItem
+                            Name="MI0dot6"
+                            Click="MI0dot6_Click"
+                            Header="x0.6" />
+                        <MenuItem
+                            Name="MI0dot8"
+                            Click="MI0dot8_Click"
+                            Header="x0.8" />
+                        <MenuItem
+                            Name="MI1dot0"
+                            Click="MI1dot0_Click"
+                            Header="x1.0" />
+                        <MenuItem
+                            Name="MI1dot2"
+                            Click="MI1dot2_Click"
+                            Header="x1.2" />
+                        <MenuItem
+                            Name="MI1dot4"
+                            Click="MI1dot4_Click"
+                            Header="x1.4" />
+                        <MenuItem
+                            Name="MI1dot6"
+                            Click="MI1dot6_Click"
+                            Header="x1.6" />
+                        <MenuItem
+                            Name="MI2dot0"
+                            Click="MI2dot0_Click"
+                            Header="x2.0" />
+                        <MenuItem
+                            Name="MI3dot0"
+                            Click="MI3dot0_Click"
+                            Header="x3.0" />
+                    </MenuItem>
                     <Separator />
                     <MenuItem Click="Exit_Click" Header="退出程序" />
                 </ContextMenu>

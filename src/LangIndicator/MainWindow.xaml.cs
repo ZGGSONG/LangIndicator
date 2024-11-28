@@ -15,6 +15,7 @@ public partial class MainWindow
         public static bool IsStartup;
         public static bool IsShowFullShape;
         public static bool IsShowSymbol;
+        public static double HiddenDelayMultiplier;
     }
 
     private static class Constant
@@ -121,7 +122,7 @@ public partial class MainWindow
         UpdateIndicatorText(conversionMode, capsLock);
         ShowAnimations(y);
 
-        _hiddenTimer.Change(Constant.HiddenDelay, Timeout.Infinite);
+        _hiddenTimer.Change((int)(Constant.HiddenDelay * Config.HiddenDelayMultiplier), Timeout.Infinite);
     }
 
     private void UpdateIndicatorText(int conversionMode, int capsLock)
@@ -218,9 +219,13 @@ public partial class MainWindow
 
     private void InitializeConfig()
     {
-        Config.IsStartup = GetConfigValue("IsStartup");
-        Config.IsShowFullShape = GetConfigValue("IsShowFullShape");
-        Config.IsShowSymbol = GetConfigValue("IsShowSymbol");
+        Config.IsStartup = GetConfigValue(nameof(Config.IsStartup));
+        Config.IsShowFullShape = GetConfigValue(nameof(Config.IsShowFullShape));
+        Config.IsShowSymbol = GetConfigValue(nameof(Config.IsShowSymbol));
+        if (!double.TryParse(ConfigurationManager.AppSettings.Get(nameof(Config.HiddenDelayMultiplier)), out Config.HiddenDelayMultiplier))
+        {
+            Config.HiddenDelayMultiplier = 1.0;
+        }
 
         if (Config.IsStartup && !ShortcutUtilities.IsStartup())
         {
@@ -229,6 +234,55 @@ public partial class MainWindow
         Startup.IsChecked = Config.IsStartup;
         ShowSymbol.IsChecked = Config.IsShowSymbol;
         ShowShape.IsChecked = Config.IsShowFullShape;
+        ShowShape.IsChecked = Config.IsShowFullShape;
+        SetHiddenDelayMultiplier(Config.HiddenDelayMultiplier);
+    }
+
+    private void SetHiddenDelayMultiplier(double value)
+    {
+        Config.HiddenDelayMultiplier = value;
+
+        MI0dot6.IsChecked = false;
+        MI0dot8.IsChecked = false;
+        MI1dot0.IsChecked = false;
+        MI1dot2.IsChecked = false;
+        MI1dot4.IsChecked = false;
+        MI1dot6.IsChecked = false;
+        MI2dot0.IsChecked = false;
+        MI3dot0.IsChecked = false;
+        switch (value)
+        {
+            case 0.6:
+                MI0dot6.IsChecked = true;
+                break;
+            case 0.8:
+                MI0dot8.IsChecked = true;
+                break;
+            case 1.0:
+                MI1dot0.IsChecked = true;
+                break;
+            case 1.2:
+                MI1dot2.IsChecked = true;
+                break;
+            case 1.4:
+                MI1dot4.IsChecked = true;
+                break;
+            case 1.6:
+                MI1dot6.IsChecked = true;
+                break;
+            case 2.0:
+                MI2dot0.IsChecked = true;
+                break;
+            case 3.0:
+                MI3dot0.IsChecked = true;
+                break;
+            default:
+                MI1dot0.IsChecked = true;
+                break;
+
+        }
+
+        SaveConfig();
     }
 
     private static bool GetConfigValue(string key)
@@ -241,20 +295,21 @@ public partial class MainWindow
         var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
         var settings = config.AppSettings.Settings;
 
-        SaveConfigValue(settings, "IsStartup", Config.IsStartup);
-        SaveConfigValue(settings, "IsShowSymbol", Config.IsShowSymbol);
-        SaveConfigValue(settings, "IsShowFullShape", Config.IsShowFullShape);
+        SaveConfigValue(settings, nameof(Config.IsStartup), Config.IsStartup);
+        SaveConfigValue(settings, nameof(Config.IsShowSymbol), Config.IsShowSymbol);
+        SaveConfigValue(settings, nameof(Config.IsShowFullShape), Config.IsShowFullShape);
+        SaveConfigValue(settings, nameof(Config.HiddenDelayMultiplier), Config.HiddenDelayMultiplier);
 
         config.Save(ConfigurationSaveMode.Modified);
         ConfigurationManager.RefreshSection("appSettings");
     }
 
-    private static void SaveConfigValue(KeyValueConfigurationCollection settings, string key, bool value)
+    private static void SaveConfigValue<T>(KeyValueConfigurationCollection settings, string key, T value)
     {
         if (settings[key] != null)
-            settings[key].Value = value.ToString();
+            settings[key].Value = value?.ToString() ?? "";
         else
-            settings.Add(key, value.ToString());
+            settings.Add(key, value?.ToString() ?? "");
     }
 
     private void Startup_OnClick(object sender, RoutedEventArgs e)
@@ -281,6 +336,46 @@ public partial class MainWindow
     private void ShowShape_Click(object sender, RoutedEventArgs e)
     {
         ToggleConfigOption(ref Config.IsShowFullShape, ShowShape);
+    }
+
+    private void MI0dot6_Click(object sender, RoutedEventArgs e)
+    {
+        SetHiddenDelayMultiplier(0.6);
+    }
+
+    private void MI0dot8_Click(object sender, RoutedEventArgs e)
+    {
+        SetHiddenDelayMultiplier(0.8);
+    }
+
+    private void MI1dot0_Click(object sender, RoutedEventArgs e)
+    {
+        SetHiddenDelayMultiplier(1.0);
+    }
+
+    private void MI1dot2_Click(object sender, RoutedEventArgs e)
+    {
+        SetHiddenDelayMultiplier(1.2);
+    }
+
+    private void MI1dot4_Click(object sender, RoutedEventArgs e)
+    {
+        SetHiddenDelayMultiplier(1.4);
+    }
+
+    private void MI1dot6_Click(object sender, RoutedEventArgs e)
+    {
+        SetHiddenDelayMultiplier(1.6);
+    }
+
+    private void MI2dot0_Click(object sender, RoutedEventArgs e)
+    {
+        SetHiddenDelayMultiplier(2.0);
+    }
+
+    private void MI3dot0_Click(object sender, RoutedEventArgs e)
+    {
+        SetHiddenDelayMultiplier(3.0);
     }
 
     private void ToggleConfigOption(ref bool configOption, MenuItem item)
