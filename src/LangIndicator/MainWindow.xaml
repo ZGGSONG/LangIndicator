@@ -30,7 +30,10 @@
                 Color="Gray" />
         </Grid.Effect>
 
-        <tb:TaskbarIcon IconSource="/Assets/favicon.png" ToolTipText="Lang Indicator">
+        <tb:TaskbarIcon
+            Name="NotifyIcon"
+            IconSource="/Assets/favicon.png"
+            ToolTipText="Lang Indicator ">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
                     <MenuItem

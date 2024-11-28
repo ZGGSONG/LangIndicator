@@ -88,6 +88,9 @@ public partial class MainWindow
         Visibility = Visibility.Collapsed;
 
         Startup.IsChecked = ShortcutUtilities.IsStartup();
+
+        var version = Application.ResourceAssembly.GetName().Version?.ToString() ?? "0.0.1";
+        NotifyIcon.ToolTipText += FormatVersion(version);
     }
 
     private void RefreshTimerTick(object? sender, EventArgs e)
@@ -180,6 +183,11 @@ public partial class MainWindow
         y = Math.Min(screenHeight - Height, y);
 
         return (x, y);
+    }
+    public string FormatVersion(string version)
+    {
+        var ver = new Version(version);
+        return $"{ver.Major}.{ver.Minor}.{ver.Build}";
     }
 
     /// <summary>
