@@ -31,6 +31,7 @@
     <ItemGroup>
         <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
         <PackageReference Include="System.Private.Uri" Version="4.3.2" />
+        <PackageReference Include="WpfScreenHelper" Version="2.1.1" />
     </ItemGroup>
 
     <ItemGroup>

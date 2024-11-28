@@ -166,16 +166,15 @@ public partial class MainWindow
     {
         GetCursorPos(out var point);
 
-        var source = PresentationSource.FromVisual(Application.Current.MainWindow!);
-        if (source?.CompositionTarget == null) return (point.X, point.Y);
-        var transformToDevice = source.CompositionTarget.TransformToDevice;
+        var screens = WpfScreenHelper.Screen.AllScreens;
+        var currentScreen = screens.FirstOrDefault(x => x.Bounds.Contains(point.X, point.Y)) ?? screens.First();
 
-        var x = point.X / transformToDevice.M11;
-        var y = point.Y / transformToDevice.M22;
+        var x = point.X / currentScreen.ScaleFactor;
+        var y = point.Y / currentScreen.ScaleFactor;
 
         // 确保窗口不会超出屏幕边界
-        var screenWidth = SystemParameters.WorkArea.Width;
-        var screenHeight = SystemParameters.WorkArea.Height;
+        var screenWidth = currentScreen.WpfWorkingArea.Width;
+        var screenHeight = currentScreen.WpfWorkingArea.Height;
 
         x = Math.Min(screenWidth - Width, x);
         y = Math.Min(screenHeight - Height, y);
