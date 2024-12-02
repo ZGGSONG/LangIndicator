@@ -4,6 +4,10 @@ using System.Windows;
 
 namespace LangIndicator;
 
+/// <summary>
+///     <see href="https://stackoverflow.com/questions/357076/best-way-to-hide-a-window-from-the-alt-tab-program-switcher/551847#551847"/>
+///     <see href="https://blog.lindexi.com/post/WPF-%E5%9C%A8-Alt+Tab-%E9%9A%90%E8%97%8F%E7%AA%97%E5%8F%A3.html"/>
+/// </summary>
 public static class WindowStyleUtilities
 {
     private const int GWL_EXSTYLE = -20;
