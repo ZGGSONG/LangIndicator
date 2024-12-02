@@ -83,6 +83,8 @@ public partial class MainWindow
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        WindowStyleUtilities.HideFromAltTab(this);
+
         Left = SystemParameters.WorkArea.Width - Width - Constant.WindowOffset;
         Top = SystemParameters.WorkArea.Height - Height - Constant.WindowOffset;
         Visibility = Visibility.Collapsed;
