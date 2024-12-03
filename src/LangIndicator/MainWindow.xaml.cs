@@ -27,7 +27,7 @@ public partial class MainWindow
         public const string ChineseIcon = "\xe696";
         public const string EnglishIcon = "\xe695";
         public const string UpperCaseIcon = "\xe603";
-        public const string FullShapeIcon = "\xe62c";
+        public const string FullShapeIcon = "\xe816";
         public const string HalfShapeIcon = "\xe6f7";
         public const string SymbolIcon = "\xe637";
     }

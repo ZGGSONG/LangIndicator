@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "1917169",
+      "name": "圆形填充",
+      "font_class": "circle1",
+      "unicode": "e816",
+      "unicode_decimal": 59414
+    },
+    {
       "icon_id": "11348862",
       "name": "a",
       "font_class": "a",

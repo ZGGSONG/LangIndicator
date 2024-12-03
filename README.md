@@ -25,6 +25,8 @@ Download the latest [Release](https://github.com/ZGGSONG/LangIndicator/releases)
 
 ![shortcut](./Assets/shortcut.png)
 
+![shortcut2](./Assets/shortcut2.png)
+
 ## Author
 
 **LangIndicator** © [zggsong](https://github.com/zggsong), Released under the [MIT](https://github.com/ZGGSONG/LangIndicator/blob/main/LICENSE) License.<br>
