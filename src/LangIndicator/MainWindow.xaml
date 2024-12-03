@@ -97,7 +97,8 @@
                 x:Name="LangTxt"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                FontSize="17"
+                FontFamily="{StaticResource IconFont}"
+                FontSize="16"
                 FontWeight="Bold" />
         </Border>
     </Grid>

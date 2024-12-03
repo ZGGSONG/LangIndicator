@@ -24,6 +24,12 @@ public partial class MainWindow
         public const int RefreshDelay = 100;
         public const int AnimationDuration = 200;
         public const double WindowOffset = 10.0;
+        public const string ChineseIcon = "\xe696";
+        public const string EnglishIcon = "\xe695";
+        public const string UpperCaseIcon = "\xe603";
+        public const string FullShapeIcon = "\xe62c";
+        public const string HalfShapeIcon = "\xe6f7";
+        public const string SymbolIcon = "\xe637";
     }
 
     // 缓存动画对象以提高性能
@@ -137,9 +143,9 @@ public partial class MainWindow
         var isUpperCase = capsLock != 0;
         var isSymbolMode = (conversionMode & IME_CMODE_SYMBOL) != 0;
 
-        LangTxt.Text = $"{(isUpperCase ? "A" : (isChineseMode ? "中" : "英"))}" +
-                       $"{(ShowShape.IsChecked ? $" /{(isFullShape ? "⚈" : "◗")}" : "")}" +
-                       $"{(isUpperCase ? "" : (ShowSymbol.IsChecked ? $"{(isSymbolMode ? "/；" : "")}" : ""))}";
+        LangTxt.Text = $"{(isUpperCase ? Constant.UpperCaseIcon : (isChineseMode ? Constant.ChineseIcon : Constant.EnglishIcon))}" +
+                       $"{(ShowShape.IsChecked ? $" /{(isFullShape ? Constant.FullShapeIcon : Constant.HalfShapeIcon)}" : "")}" +
+                       $"{(isUpperCase ? "" : (ShowSymbol.IsChecked ? $"{(isSymbolMode ? $"/{Constant.SymbolIcon}" : "")}" : ""))}";
         LangTxt.Foreground = isUpperCase ? UpperCaseBrush : (isChineseMode ? ChineseBrush : EnglishBrush);
     }
 

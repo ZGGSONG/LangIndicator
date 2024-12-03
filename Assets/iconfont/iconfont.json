@@ -1,0 +1,79 @@
+{
+  "id": "4768612",
+  "name": "LangIndicator",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "11348862",
+      "name": "a",
+      "font_class": "a",
+      "unicode": "e603",
+      "unicode_decimal": 58883
+    },
+    {
+      "icon_id": "25778133",
+      "name": "A",
+      "font_class": "A1",
+      "unicode": "e652",
+      "unicode_decimal": 58962
+    },
+    {
+      "icon_id": "7206182",
+      "name": "UK",
+      "font_class": "UK",
+      "unicode": "e63f",
+      "unicode_decimal": 58943
+    },
+    {
+      "icon_id": "8931764",
+      "name": "中文",
+      "font_class": "zhongwen1",
+      "unicode": "e689",
+      "unicode_decimal": 59017
+    },
+    {
+      "icon_id": "9406924",
+      "name": "英文",
+      "font_class": "yingwen",
+      "unicode": "e695",
+      "unicode_decimal": 59029
+    },
+    {
+      "icon_id": "9406926",
+      "name": "中文",
+      "font_class": "zhongwen2",
+      "unicode": "e696",
+      "unicode_decimal": 59030
+    },
+    {
+      "icon_id": "1164943",
+      "name": "点",
+      "font_class": "dian1",
+      "unicode": "e62c",
+      "unicode_decimal": 58924
+    },
+    {
+      "icon_id": "12217868",
+      "name": "33-quote",
+      "font_class": "-quote",
+      "unicode": "e637",
+      "unicode_decimal": 58935
+    },
+    {
+      "icon_id": "16372496",
+      "name": "月亮",
+      "font_class": "yueliang",
+      "unicode": "e6f7",
+      "unicode_decimal": 59127
+    },
+    {
+      "icon_id": "34064180",
+      "name": "uniEE72",
+      "font_class": "uniEE72",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    }
+  ]
+}

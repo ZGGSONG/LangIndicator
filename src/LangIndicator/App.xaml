@@ -9,6 +9,7 @@
                 <ResourceDictionary Source="pack://application:,,,/LangIndicator;component/ContextMenuStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
+            <FontFamily x:Key="IconFont">/LangIndicator;component/Assets/#iconfont</FontFamily>
             <Style BasedOn="{StaticResource ModernContextMenu}" TargetType="{x:Type ContextMenu}" />
             <Style BasedOn="{StaticResource ModernMenuItem}" TargetType="{x:Type MenuItem}" />
         </ResourceDictionary>
