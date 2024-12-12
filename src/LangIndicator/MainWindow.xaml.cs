@@ -177,7 +177,8 @@ public partial class MainWindow
     {
         GetCursorPos(out var point);
 
-        var screens = WpfScreenHelper.Screen.AllScreens;
+        var screens = WpfScreenHelper.Screen.AllScreens?.ToArray();
+        if (screens == null) return (0L, 0L);
         var currentScreen = screens.FirstOrDefault(x => x.Bounds.Contains(point.X, point.Y)) ?? screens.First();
 
         var x = point.X / currentScreen.ScaleFactor;
