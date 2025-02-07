@@ -123,10 +123,34 @@ public partial class MainWindow
             System.Diagnostics.Debug.WriteLine($"Error checking IME status: {ex.Message}");
         }
     }
+    
+    private (double x, double y) GetIndicatorPosition()
+    {
+        // 首先尝试获取文本光标位置
+        var (hasCaretPosition, caretPoint) = CaretPositionUtilities.GetCaretPosition();
+        // 如果没有文本光标，则使用鼠标位置
+        if (!hasCaretPosition) return GetCursorPosition();
+        
+        var screens = WpfScreenHelper.Screen.AllScreens?.ToArray();
+        if (screens == null) return (0L, 0L);
+        var currentScreen = screens.FirstOrDefault(x => x.Bounds.Contains(caretPoint.X, caretPoint.Y)) ?? screens.First();
+        
+        var x = caretPoint.X / currentScreen.ScaleFactor;
+        var y = caretPoint.Y / currentScreen.ScaleFactor; // 在光标下方20个像素显示
+        
+        // 确保窗口不会超出屏幕边界
+        var screenWidth = currentScreen.WpfWorkingArea.Width;
+        var screenHeight = currentScreen.WpfWorkingArea.Height;
+        
+        x = Math.Min(screenWidth - Width, x);
+        y = Math.Min(screenHeight - Height, y);
+        
+        return (x, y);
+    }
 
     private void UpdateDisplay(int conversionMode, int capsLock)
     {
-        var (x, y) = GetCursorPosition();
+        var (x, y) = GetIndicatorPosition();
         Left = x;
         Top = y;
 
@@ -193,7 +217,8 @@ public partial class MainWindow
 
         return (x, y);
     }
-    public string FormatVersion(string version)
+
+    private string FormatVersion(string version)
     {
         var ver = new Version(version);
         return $"{ver.Major}.{ver.Minor}.{ver.Build}";
@@ -203,7 +228,7 @@ public partial class MainWindow
     /// 获取大写锁定键状态
     /// </summary>
     /// <returns></returns>
-    public static int GetCapsLockState()
+    private static int GetCapsLockState()
     {
         return GetKeyState(VK_CAPITAL) & 0x0001;
     }
@@ -211,7 +236,7 @@ public partial class MainWindow
     /// <summary>
     /// 获取当前输入法的转换模式
     /// </summary>
-    public static int GetImeConversionMode()
+    private static int GetImeConversionMode()
     {
         var foregroundWindow = GetForegroundWindow();
         if (foregroundWindow == IntPtr.Zero)
