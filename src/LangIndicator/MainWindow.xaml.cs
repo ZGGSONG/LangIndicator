@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,7 +22,7 @@ public partial class MainWindow
     private static class Constant
     {
         public const int HiddenDelay = 1000;
-        public const int RefreshDelay = 100;
+        public const int RefreshDelay = 3000;
         public const int AnimationDuration = 200;
         public const double WindowOffset = 10.0;
         public const string ChineseIcon = "\xe696";
@@ -111,40 +112,40 @@ public partial class MainWindow
         try
         {
             var (conversionMode, capsLock) = (GetImeConversionMode(), GetCapsLockState());
-            if (conversionMode == _storageDic[StorageMsg.ConversionMode] && capsLock == _storageDic[StorageMsg.CapsLock])
-                return;
+            //if (conversionMode == _storageDic[StorageMsg.ConversionMode] && capsLock == _storageDic[StorageMsg.CapsLock])
+            //    return;
 
-            _storageDic[StorageMsg.ConversionMode] = conversionMode;
-            _storageDic[StorageMsg.CapsLock] = capsLock;
-            UpdateDisplay(conversionMode, capsLock);
+            //_storageDic[StorageMsg.ConversionMode] = conversionMode;
+            //_storageDic[StorageMsg.CapsLock] = capsLock;
+            //UpdateDisplay(conversionMode, capsLock);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error checking IME status: {ex.Message}");
         }
     }
-    
+
     private (double x, double y) GetIndicatorPosition()
     {
         // 首先尝试获取文本光标位置
         var (hasCaretPosition, caretPoint) = CaretPositionUtilities.GetCaretPosition();
         // 如果没有文本光标，则使用鼠标位置
         if (!hasCaretPosition) return GetCursorPosition();
-        
+
         var screens = WpfScreenHelper.Screen.AllScreens?.ToArray();
         if (screens == null) return (0L, 0L);
         var currentScreen = screens.FirstOrDefault(x => x.Bounds.Contains(caretPoint.X, caretPoint.Y)) ?? screens.First();
-        
+
         var x = caretPoint.X / currentScreen.ScaleFactor;
         var y = caretPoint.Y / currentScreen.ScaleFactor; // 在光标下方20个像素显示
-        
+
         // 确保窗口不会超出屏幕边界
         var screenWidth = currentScreen.WpfWorkingArea.Width;
         var screenHeight = currentScreen.WpfWorkingArea.Height;
-        
+
         x = Math.Min(screenWidth - Width, x);
         y = Math.Min(screenHeight - Height, y);
-        
+
         return (x, y);
     }
 
@@ -245,10 +246,31 @@ public partial class MainWindow
         var imeWnd = ImmGetDefaultIMEWnd(foregroundWindow);
         if (imeWnd == IntPtr.Zero)
             return 0;
+        
+        var result = SendMessage(imeWnd, WM_IME_CONTROL, new IntPtr(IMC_GETOPENSTATUS), IntPtr.Zero);
+        System.Diagnostics.Debug.WriteLine($"GetOpenStatus: {result}");
 
-        var result = SendMessage(imeWnd, WM_IME_CONTROL, new IntPtr(IMC_GETCONVERSIONMODE), IntPtr.Zero);
+        result = SendMessage(imeWnd, WM_IME_CONTROL, new IntPtr(IMC_GETCONVERSIONMODE), IntPtr.Zero);
+        System.Diagnostics.Debug.WriteLine($"GetConversionMode: {result}");
+
+        try
+        {
+            uint foregroundProcess = GetWindowThreadProcessId(foregroundWindow, IntPtr.Zero);
+            int keyboardLayout = GetKeyboardLayout(foregroundProcess).ToInt32() & 0xFFFF;
+            //return new CultureInfo(keyboardLayout);
+            System.Diagnostics.Debug.WriteLine($"GetCurrentKeyboardLayout: {keyboardLayout}");
+        }
+        catch (Exception)
+        {
+            //new CultureInfo(1033); // Assume English if something went wrong.
+            System.Diagnostics.Debug.WriteLine($"GetCurrentKeyboardLayout Error: {1033}");
+        }
+
+
         return result.ToInt32();
     }
+
+    #region Others
 
     protected override void OnClosed(EventArgs e)
     {
@@ -431,6 +453,8 @@ public partial class MainWindow
         Close();
     }
 
+    #endregion
+
     #region Win32 API
 
     /// <summary>
@@ -447,10 +471,12 @@ public partial class MainWindow
     /// 输入法管理器命令
     /// </summary>
     private const int IMC_GETCONVERSIONMODE = 0x001;
+    private const int IMC_GETOPENSTATUS = 0x005;
 
     #region IGP_CONVERSION
     // https://www.cnblogs.com/zyl910/archive/2006/06/04/2186644.html
 
+    private const int IME_CMODE_ALPHANUMERIC = 0x0;     // 英文字母和数字输入
     private const int IME_CMODE_CHINESE = 0x1;          // 中文输入
     private const int IME_CMODE_NATIVE = 0x1;           // 等同于 CHINESE
     private const int IME_CMODE_FULLSHAPE = 0x8;        // 全角
@@ -487,6 +513,13 @@ public partial class MainWindow
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetCursorPos(out Point lpPoint);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hwnd, IntPtr proccess);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetKeyboardLayout(uint thread);
+
     #endregion
 }
 
